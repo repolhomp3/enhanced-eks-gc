@@ -593,6 +593,19 @@ resource "aws_iam_role_policy_attachment" "default_pod_policy" {
   policy_arn = aws_iam_policy.default_pod_policy.arn
 }
 
+resource "kubernetes_namespace" "pod_identity" {
+  for_each = toset([for ns in var.pod_identity_namespaces : ns if ns != "default"])
+
+  metadata {
+    name = each.value
+    labels = {
+      "pod-identity" = "enabled"
+    }
+  }
+
+  depends_on = [aws_eks_cluster.main]
+}
+
 resource "aws_eks_pod_identity_association" "namespaces" {
   for_each = toset(var.pod_identity_namespaces)
 
@@ -601,7 +614,10 @@ resource "aws_eks_pod_identity_association" "namespaces" {
   service_account = "default"
   role_arn        = aws_iam_role.default_pod_identity.arn
 
-  depends_on = [aws_eks_cluster.main]
+  depends_on = [
+    aws_eks_cluster.main,
+    kubernetes_namespace.pod_identity
+  ]
 }
 
 resource "aws_iam_role" "lb_controller" {
