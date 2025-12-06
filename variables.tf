@@ -54,6 +54,30 @@ variable "pod_identity_namespaces" {
   default     = ["default"]
 }
 
+variable "create_vpc" {
+  description = "Whether to create a new VPC or use an existing one"
+  type        = bool
+  default     = true
+}
+
+variable "existing_vpc_id" {
+  description = "ID of existing VPC (required if create_vpc = false)"
+  type        = string
+  default     = ""
+}
+
+variable "existing_private_subnet_ids" {
+  description = "List of existing private subnet IDs (required if create_vpc = false)"
+  type        = list(string)
+  default     = []
+}
+
+variable "existing_public_subnet_ids" {
+  description = "List of existing public subnet IDs (required if create_vpc = false)"
+  type        = list(string)
+  default     = []
+}
+
 variable "lb_controller_version" {
   description = "AWS Load Balancer Controller Helm chart version"
   type        = string

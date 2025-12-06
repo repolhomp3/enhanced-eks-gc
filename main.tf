@@ -46,7 +46,14 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+locals {
+  vpc_id             = var.create_vpc ? aws_vpc.main[0].id : var.existing_vpc_id
+  private_subnet_ids = var.create_vpc ? aws_subnet.private[*].id : var.existing_private_subnet_ids
+  public_subnet_ids  = var.create_vpc ? aws_subnet.public[*].id : var.existing_public_subnet_ids
+}
+
 resource "aws_vpc" "main" {
+  count = var.create_vpc ? 1 : 0
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -57,8 +64,8 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "private" {
-  count             = 3
-  vpc_id            = aws_vpc.main.id
+  count             = var.create_vpc ? 3 : 0
+  vpc_id            = aws_vpc.main[0].id
   cidr_block        = cidrsubnet(var.vpc_cidr, 4, count.index)
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
@@ -70,8 +77,8 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_subnet" "public" {
-  count                   = 3
-  vpc_id                  = aws_vpc.main.id
+  count                   = var.create_vpc ? 3 : 0
+  vpc_id                  = aws_vpc.main[0].id
   cidr_block              = cidrsubnet(var.vpc_cidr, 4, count.index + 3)
   availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = true
@@ -84,7 +91,8 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
+  count  = var.create_vpc ? 1 : 0
+  vpc_id = aws_vpc.main[0].id
 
   tags = {
     Name = "${var.cluster_name}-igw"
@@ -92,6 +100,7 @@ resource "aws_internet_gateway" "main" {
 }
 
 resource "aws_eip" "nat" {
+  count  = var.create_vpc ? 1 : 0
   domain = "vpc"
 
   tags = {
@@ -100,7 +109,8 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
+  count         = var.create_vpc ? 1 : 0
+  allocation_id = aws_eip.nat[0].id
   subnet_id     = aws_subnet.public[0].id
 
   tags = {
@@ -109,11 +119,12 @@ resource "aws_nat_gateway" "main" {
 }
 
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
+  count  = var.create_vpc ? 1 : 0
+  vpc_id = aws_vpc.main[0].id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.main[0].id
   }
 
   tags = {
@@ -122,11 +133,12 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
+  count  = var.create_vpc ? 1 : 0
+  vpc_id = aws_vpc.main[0].id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
+    nat_gateway_id = aws_nat_gateway.main[0].id
   }
 
   tags = {
@@ -135,15 +147,15 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = 3
+  count          = var.create_vpc ? 3 : 0
   subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
+  route_table_id = aws_route_table.public[0].id
 }
 
 resource "aws_route_table_association" "private" {
-  count          = 3
+  count          = var.create_vpc ? 3 : 0
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[0].id
 }
 
 resource "aws_iam_role" "cluster" {
@@ -169,7 +181,7 @@ resource "aws_iam_role_policy_attachment" "cluster_policy" {
 resource "aws_security_group" "cluster" {
   name        = "${var.cluster_name}-cluster-sg"
   description = "EKS cluster security group"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = local.vpc_id
 
   egress {
     from_port   = 0
@@ -189,7 +201,7 @@ resource "aws_eks_cluster" "main" {
   version  = var.kubernetes_version
 
   vpc_config {
-    subnet_ids              = concat(aws_subnet.private[*].id, aws_subnet.public[*].id)
+    subnet_ids              = concat(local.private_subnet_ids, local.public_subnet_ids)
     endpoint_private_access = true
     endpoint_public_access  = true
     security_group_ids      = [aws_security_group.cluster.id]
@@ -835,7 +847,7 @@ resource "helm_release" "lb_controller" {
 
   set {
     name  = "vpcId"
-    value = aws_vpc.main.id
+    value = local.vpc_id
   }
 
   depends_on = [
