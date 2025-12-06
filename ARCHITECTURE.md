@@ -4,6 +4,131 @@
 
 This document provides detailed architectural specifications for creating accurate architectural diagrams of the Enhanced EKS Cluster deployed in AWS GovCloud (us-gov-west-1).
 
+## Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph Internet
+        Users[Users/Clients]
+    end
+
+    subgraph "AWS GovCloud us-gov-west-1"
+        IGW[Internet Gateway]
+        
+        subgraph "VPC 10.0.0.0/16"
+            subgraph "AZ-1 us-gov-west-1a"
+                PubSub1["Public Subnet<br/>10.0.48.0/20"]
+                PrivSub1["Private Subnet<br/>10.0.0.0/20"]
+                NAT[NAT Gateway]
+                NLB["Istio Ingress<br/>NLB"]
+                Nodes1["Worker Nodes<br/>(Auto Mode)"]
+            end
+            
+            subgraph "AZ-2 us-gov-west-1b"
+                PubSub2["Public Subnet<br/>10.0.64.0/20"]
+                PrivSub2["Private Subnet<br/>10.0.16.0/20"]
+                Nodes2["Worker Nodes<br/>(Auto Mode)"]
+            end
+            
+            subgraph "AZ-3 us-gov-west-1c"
+                PubSub3["Public Subnet<br/>10.0.80.0/20"]
+                PrivSub3["Private Subnet<br/>10.0.32.0/20"]
+                Nodes3["Worker Nodes<br/>(Auto Mode)"]
+            end
+            
+            subgraph "EKS Control Plane (AWS Managed)"
+                API["API Server<br/>(Multi-AZ)"]
+                ETCD["etcd<br/>(3 replicas)"]
+            end
+            
+            subgraph "Nodes1"
+                subgraph "istio-system namespace"
+                    Istiod["Istiod<br/>(Control Plane)"]
+                    IstioGW["Istio Gateway<br/>(2 replicas)"]
+                    Kiali["Kiali<br/>(Visualization)"]
+                end
+                
+                subgraph "keda namespace"
+                    KEDA["KEDA Operator<br/>(Autoscaling)"]
+                end
+                
+                subgraph "prometheus namespace"
+                    Prom["Prometheus<br/>(Metrics)"]
+                end
+                
+                subgraph "kube-system namespace"
+                    LBC["AWS LB Controller"]
+                    MS["Metrics Server"]
+                    CoreDNS["CoreDNS"]
+                    VPC_CNI["VPC CNI"]
+                end
+                
+                subgraph "default namespace"
+                    App1["Application Pods<br/>(with Istio sidecar)"]
+                end
+            end
+        end
+        
+        subgraph "AWS Services"
+            XRay["AWS X-Ray<br/>(Tracing)"]
+            CWL["CloudWatch Logs"]
+            ECR["ECR<br/>(Container Registry)"]
+            EBS["EBS Volumes"]
+            EFS["EFS"]
+            S3["S3 Buckets"]
+            Bedrock["Amazon Bedrock"]
+            RDS["RDS Databases"]
+            DDB["DynamoDB"]
+        end
+    end
+    
+    Users -->|HTTPS| IGW
+    IGW --> PubSub1
+    PubSub1 --> NLB
+    NLB --> IstioGW
+    IstioGW -->|mTLS| App1
+    
+    PrivSub1 --> NAT
+    PrivSub2 --> NAT
+    PrivSub3 --> NAT
+    NAT --> PubSub1
+    PubSub1 --> IGW
+    
+    Nodes1 --> API
+    Nodes2 --> API
+    Nodes3 --> API
+    
+    App1 -->|Traces| XRay
+    App1 -->|Logs| CWL
+    App1 -->|Images| ECR
+    App1 -->|Storage| EBS
+    App1 -->|Shared Storage| EFS
+    App1 -->|Object Storage| S3
+    App1 -->|AI/ML| Bedrock
+    App1 -->|Database| RDS
+    App1 -->|NoSQL| DDB
+    
+    Prom -->|Scrape Metrics| App1
+    Kiali -->|Query| Prom
+    Istiod -->|Inject Sidecar| App1
+    KEDA -->|Scale| App1
+    MS -->|Metrics| API
+    
+    style Users fill:#e1f5ff
+    style IGW fill:#ff9900
+    style NAT fill:#ffcc00
+    style NLB fill:#00cc00
+    style API fill:#0066cc
+    style ETCD fill:#0066cc
+    style Istiod fill:#466bb0
+    style IstioGW fill:#466bb0
+    style Kiali fill:#466bb0
+    style KEDA fill:#326ce5
+    style Prom fill:#e6522c
+    style XRay fill:#ff9900
+    style App1 fill:#326ce5
+```
+
 ---
 
 ## 1. Network Architecture
