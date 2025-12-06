@@ -19,14 +19,14 @@ variable "vpc_cidr" {
 variable "kubernetes_version" {
   description = "Kubernetes version"
   type        = string
-  default     = "1.31"
+  default     = "1.34"
 }
 
 variable "addon_versions" {
   description = "EKS addon versions"
   type        = map(string)
   default = {
-    "kube-proxy"                    = "v1.31.0-eksbuild.5"
+    "kube-proxy"                    = "v1.34.0-eksbuild.1"
     "vpc-cni"                       = "v1.19.0-eksbuild.1"
     "coredns"                       = "v1.11.3-eksbuild.2"
     "aws-ebs-csi-driver"            = "v1.37.0-eksbuild.1"

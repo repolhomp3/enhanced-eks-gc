@@ -188,7 +188,7 @@ graph TB
 
 **EKS Control Plane:**
 - Name: enhanced-eks-cluster
-- Version: 1.31
+- Version: 1.34
 - Endpoint Access: Public + Private
 - Location: AWS-managed (multi-AZ)
 - API Server: Accessible from public internet and VPC
