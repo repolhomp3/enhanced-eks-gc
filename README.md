@@ -454,6 +454,9 @@ See [AI-GETTING-STARTED.md](AI-GETTING-STARTED.md) for setup guide.
 - [AI-GETTING-STARTED.md](AI-GETTING-STARTED.md) - AI agent setup guide
 - [SRE-RUNBOOKS.md](SRE-RUNBOOKS.md) - Automated runbooks
 - [AI-PLAYBOOKS.md](AI-PLAYBOOKS.md) - Agentic workflows
+- [INCIDENT-MANAGER.md](INCIDENT-MANAGER.md) - On-call management with SMS
+- [CHATBOT-SETUP.md](CHATBOT-SETUP.md) - Teams/Slack integration
+- [web-ui/README.md](web-ui/README.md) - Web chat interface
 
 ## Support
 

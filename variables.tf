@@ -118,3 +118,39 @@ variable "oncall_phone_numbers" {
   default     = []
   sensitive   = true
 }
+
+variable "enable_chatbot" {
+  description = "Enable AWS Chatbot for Microsoft Teams/Slack integration"
+  type        = bool
+  default     = false
+}
+
+variable "chatbot_teams_team_id" {
+  description = "Microsoft Teams Team ID"
+  type        = string
+  default     = ""
+}
+
+variable "chatbot_teams_channel_id" {
+  description = "Microsoft Teams Channel ID"
+  type        = string
+  default     = ""
+}
+
+variable "chatbot_teams_tenant_id" {
+  description = "Microsoft Teams Tenant ID"
+  type        = string
+  default     = ""
+}
+
+variable "chatbot_slack_workspace_id" {
+  description = "Slack Workspace ID"
+  type        = string
+  default     = ""
+}
+
+variable "chatbot_slack_channel_id" {
+  description = "Slack Channel ID"
+  type        = string
+  default     = ""
+}

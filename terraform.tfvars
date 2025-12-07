@@ -116,3 +116,19 @@ oncall_phone_numbers = [
   # "+12025551234",  # Primary on-call
   # "+12025555678",  # Secondary on-call
 ]
+
+# ============================================================================
+# AWS Chatbot (Microsoft Teams / Slack)
+# ============================================================================
+# Enable AWS Chatbot for Teams/Slack integration (FREE - no per-message cost)
+# Alternative to SMS for secure environments
+enable_chatbot = false
+
+# Microsoft Teams configuration (get IDs from AWS Chatbot console)
+chatbot_teams_team_id     = ""  # Example: "19:xxx@thread.tacv2"
+chatbot_teams_channel_id  = ""  # Example: "19:xxx@thread.tacv2"
+chatbot_teams_tenant_id   = ""  # Example: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Slack configuration (get IDs from AWS Chatbot console)
+chatbot_slack_workspace_id = ""  # Example: "T01234567"
+chatbot_slack_channel_id   = ""  # Example: "C01234567"
