@@ -132,3 +132,12 @@ chatbot_teams_tenant_id   = ""  # Example: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 # Slack configuration (get IDs from AWS Chatbot console)
 chatbot_slack_workspace_id = ""  # Example: "T01234567"
 chatbot_slack_channel_id   = ""  # Example: "C01234567"
+
+# ============================================================================
+# CloudTrail & VPC Flow Logs (Auditing & Compliance)
+# ============================================================================
+# Enable CloudTrail for all API call auditing (STIG/FedRAMP requirement)
+enable_cloudtrail = true
+
+# Enable VPC Flow Logs for network traffic auditing (STIG/FedRAMP requirement)
+enable_vpc_flow_logs = true

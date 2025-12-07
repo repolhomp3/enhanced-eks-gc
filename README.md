@@ -459,6 +459,8 @@ See [AI-GETTING-STARTED.md](AI-GETTING-STARTED.md) for setup guide.
 
 **Operations:**
 - [DAY2-OPERATIONS.md](DAY2-OPERATIONS.md) - Day 2 operations guide
+- [INCIDENT-RESPONSE.md](INCIDENT-RESPONSE.md) - Incident response plan
+- [DISASTER-RECOVERY.md](DISASTER-RECOVERY.md) - Disaster recovery & testing
 - [INCIDENT-MANAGER.md](INCIDENT-MANAGER.md) - On-call management with SMS
 - [CHATBOT-SETUP.md](CHATBOT-SETUP.md) - Teams/Slack integration
 

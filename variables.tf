@@ -154,3 +154,15 @@ variable "chatbot_slack_channel_id" {
   type        = string
   default     = ""
 }
+
+variable "enable_cloudtrail" {
+  description = "Enable AWS CloudTrail for API call auditing"
+  type        = bool
+  default     = true
+}
+
+variable "enable_vpc_flow_logs" {
+  description = "Enable VPC Flow Logs for network traffic auditing"
+  type        = bool
+  default     = true
+}
