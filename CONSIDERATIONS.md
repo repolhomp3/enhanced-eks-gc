@@ -260,19 +260,65 @@ spec:
 
 **Note:** cert-manager is NOT FedRAMP authorized. Use ACM for compliance.
 
-### 8. GitOps
+### 8. GitOps (Optional)
 
-**ArgoCD Installation:**
-```bash
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+**ArgoCD vs CI/CD Pipeline Deployments:**
+
+| Feature | ArgoCD | GitHub/GitLab CI/CD |
+|---------|--------|---------------------|
+| **Deployment Model** | Pull (cluster pulls from Git) | Push (pipeline pushes to cluster) |
+| **Cluster Access** | No external access needed | Requires kubectl/API access |
+| **Drift Detection** | Automatic | Manual |
+| **Rollback** | One-click in UI | Re-run pipeline |
+| **Multi-cluster** | Built-in | Complex |
+| **FedRAMP Status** | ❌ Not authorized | ✅ GitHub/GitLab authorized |
+| **Complexity** | Higher (new tool) | Lower (existing CI/CD) |
+| **Audit Trail** | ArgoCD UI + Git | Git + CI/CD logs |
+
+**Recommendation: Use CI/CD Pipeline for GovCloud**
+
+**Why CI/CD is better for your use case:**
+- ✅ GitHub/GitLab are FedRAMP authorized
+- ✅ ArgoCD is NOT FedRAMP authorized
+- ✅ Simpler: Use existing CI/CD infrastructure
+- ✅ Fewer components to maintain
+- ✅ Standard `helm upgrade` from pipeline
+- ✅ Works with private EKS endpoint (via TGW VPN)
+
+**Example GitHub Actions Deployment:**
+```yaml
+name: Deploy to EKS
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # In VPC for private endpoint
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure kubectl
+      run: |
+        aws eks update-kubeconfig \
+          --region us-gov-west-1 \
+          --name enhanced-eks-cluster
+    
+    - name: Deploy with Helm
+      run: |
+        helm upgrade --install my-app ./charts/my-app \
+          --namespace production \
+          --values values-prod.yaml \
+          --wait
 ```
 
-**Benefits:**
-- Declarative GitOps deployments
-- Automated sync from Git
-- Rollback capabilities
-- Multi-cluster management
+**When ArgoCD makes sense:**
+- Multiple clusters to manage
+- Need automatic drift detection
+- Team prefers GitOps model
+- Can accept non-FedRAMP component
+
+**For GovCloud STIG compliance: Stick with CI/CD pipelines.**
 
 ---
 
