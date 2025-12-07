@@ -214,6 +214,8 @@ resource "aws_eks_cluster" "main" {
     resources = ["secrets"]
   }
 
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+
   compute_config {
     enabled       = true
     node_pools    = ["general-purpose", "system"]

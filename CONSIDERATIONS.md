@@ -42,12 +42,12 @@ spec:
   - Egress
 ```
 
-**Enable EKS Audit Logs:**
-- TODO: Add to aws_eks_cluster resource
+**✅ EKS Audit Logs (IMPLEMENTED)**
+- All control plane logs enabled (api, audit, authenticator, controllerManager, scheduler)
+- Sent to CloudWatch Logs
 - Required for: STIG compliance, GuardDuty EKS protection
-```hcl
-enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
-```
+- Retention: 90 days (CloudWatch default)
+- Cost: ~$0.50/GB ingested + $0.03/GB stored
 
 **✅ GuardDuty for EKS (IMPLEMENTED)**
 - Runtime threat detection enabled
@@ -330,7 +330,7 @@ kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/
 - [✅] Enable GuardDuty for EKS (IMPLEMENTED)
 - [✅] Implement least privilege IAM (Pod Identity implemented)
 - [✅] Enable secrets encryption with KMS (IMPLEMENTED)
-- [ ] Configure audit logging (EKS control plane logs)
+- [✅] Configure audit logging (EKS control plane logs - IMPLEMENTED)
 - [✅] Implement network segmentation (VPC, subnets, security groups)
 - [✅] Regular vulnerability scanning (Trivy in CI/CD)
 - [ ] Incident response plan
