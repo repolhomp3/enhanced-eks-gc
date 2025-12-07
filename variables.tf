@@ -143,3 +143,21 @@ variable "create_example_secret" {
   type        = bool
   default     = false
 }
+
+variable "enable_secrets_store_csi" {
+  description = "Enable Secrets Store CSI Driver (AWS-supported, FedRAMP compliant alternative)"
+  type        = bool
+  default     = false
+}
+
+variable "secrets_store_csi_version" {
+  description = "Secrets Store CSI Driver Helm chart version"
+  type        = string
+  default     = "1.4.0"
+}
+
+variable "secrets_provider_aws_version" {
+  description = "AWS Secrets Manager CSI Provider Helm chart version"
+  type        = string
+  default     = "0.3.4"
+}

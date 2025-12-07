@@ -82,7 +82,7 @@ resource "aws_eks_pod_identity_association" "external_secrets" {
   depends_on = [aws_eks_cluster.main]
 }
 
-# Install External Secrets Operator via Helm
+# Install External Secrets Operator via Helm (NOT FedRAMP authorized)
 resource "helm_release" "external_secrets" {
   count            = var.enable_external_secrets ? 1 : 0
   name             = "external-secrets"
@@ -111,6 +111,40 @@ resource "helm_release" "external_secrets" {
     aws_eks_cluster.main,
     aws_eks_pod_identity_association.external_secrets
   ]
+}
+
+# Install Secrets Store CSI Driver (AWS-supported alternative)
+resource "helm_release" "secrets_store_csi_driver" {
+  count            = var.enable_secrets_store_csi ? 1 : 0
+  name             = "secrets-store-csi-driver"
+  repository       = "https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts"
+  chart            = "secrets-store-csi-driver"
+  namespace        = "kube-system"
+  version          = var.secrets_store_csi_version
+
+  set {
+    name  = "syncSecret.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "enableSecretRotation"
+    value = "true"
+  }
+
+  depends_on = [aws_eks_cluster.main]
+}
+
+# Install AWS Secrets Manager CSI Provider
+resource "helm_release" "secrets_provider_aws" {
+  count      = var.enable_secrets_store_csi ? 1 : 0
+  name       = "secrets-provider-aws"
+  repository = "https://aws.github.io/secrets-store-csi-driver-provider-aws"
+  chart      = "secrets-store-csi-driver-provider-aws"
+  namespace  = "kube-system"
+  version    = var.secrets_provider_aws_version
+
+  depends_on = [helm_release.secrets_store_csi_driver]
 }
 
 # Create SecretStore for AWS Secrets Manager

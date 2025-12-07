@@ -81,8 +81,16 @@ enable_security_hub = true
 # Secrets Management (External Secrets Operator)
 # ============================================================================
 # Enable External Secrets Operator to sync secrets from AWS Secrets Manager
+# WARNING: External Secrets Operator is NOT FedRAMP authorized
+# For strict FedRAMP compliance, use enable_secrets_store_csi instead
 enable_external_secrets = true
 external_secrets_version = "0.9.11"
+
+# Enable Secrets Store CSI Driver (AWS-supported, FedRAMP compliant alternative)
+# Use this for strict FedRAMP compliance instead of External Secrets Operator
+enable_secrets_store_csi = false
+secrets_store_csi_version = "1.4.0"
+secrets_provider_aws_version = "0.3.4"
 
 # Create example secret for demonstration (disable in production)
 create_example_secret = false

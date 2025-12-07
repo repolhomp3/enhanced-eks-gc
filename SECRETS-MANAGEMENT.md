@@ -2,17 +2,33 @@
 
 This guide explains how to use AWS Secrets Manager with External Secrets Operator in your EKS cluster.
 
-## Architecture
+## Architecture Options
+
+### Option 1: External Secrets Operator (Default - NOT FedRAMP authorized)
 
 ```
-AWS Secrets Manager (KMS Encrypted)
+AWS Secrets Manager (✅ FedRAMP High)
     ↓
-External Secrets Operator (Pod Identity)
+External Secrets Operator (❌ Not FedRAMP)
     ↓
-Kubernetes Secrets (KMS Encrypted in etcd)
+Kubernetes Secrets (✅ KMS Encrypted)
     ↓
 Application Pods
 ```
+
+### Option 2: Secrets Store CSI Driver (FedRAMP Compliant)
+
+```
+AWS Secrets Manager (✅ FedRAMP High)
+    ↓
+Secrets Store CSI Driver (✅ AWS-supported)
+    ↓
+Volume Mount in Pod
+    ↓
+Application Reads Files
+```
+
+**For strict FedRAMP compliance, use Option 2.** See [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) for details.
 
 ## Prerequisites
 
@@ -426,8 +442,19 @@ kubectl get secret app-api-key
 kubectl exec -it my-app-xxx -- env | grep API_KEY
 ```
 
+## FedRAMP Compliance
+
+**⚠️ WARNING:** External Secrets Operator is NOT FedRAMP authorized.
+
+For strict FedRAMP compliance:
+1. Use Secrets Store CSI Driver instead (`enable_secrets_store_csi = true`)
+2. Or use direct AWS SDK calls from application code
+3. See [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) for detailed comparison
+
 ## Additional Resources
 
+- [FedRAMP Compliance Guide](FEDRAMP-COMPLIANCE.md)
 - [External Secrets Operator Documentation](https://external-secrets.io/)
+- [Secrets Store CSI Driver Documentation](https://secrets-store-csi-driver.sigs.k8s.io/)
 - [AWS Secrets Manager User Guide](https://docs.aws.amazon.com/secretsmanager/)
 - [EKS Pod Identity Documentation](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html)
