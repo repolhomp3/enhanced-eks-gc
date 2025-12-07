@@ -98,3 +98,13 @@ output "guardduty_sns_topic_arn" {
   description = "SNS topic ARN for GuardDuty alerts"
   value       = var.enable_guardduty ? aws_sns_topic.guardduty_alerts[0].arn : null
 }
+
+output "security_hub_enabled" {
+  description = "Whether Security Hub is enabled"
+  value       = var.enable_security_hub
+}
+
+output "security_hub_sns_topic_arn" {
+  description = "SNS topic ARN for Security Hub findings"
+  value       = var.enable_security_hub ? aws_sns_topic.security_hub_findings[0].arn : null
+}

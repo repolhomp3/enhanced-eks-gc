@@ -69,3 +69,10 @@ enable_vpc_endpoints = false
 # Enable GuardDuty for EKS threat detection
 # Detects: privilege escalation, container escapes, crypto mining, malware
 enable_guardduty = true
+
+# ============================================================================
+# AWS Security Hub (CIS Benchmarks & Compliance)
+# ============================================================================
+# Enable Security Hub for automated CIS benchmarks and compliance monitoring
+# Includes: CIS AWS Foundations Benchmark v1.4.0, AWS Foundational Security Best Practices
+enable_security_hub = true

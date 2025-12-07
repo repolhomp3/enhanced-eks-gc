@@ -119,3 +119,9 @@ variable "enable_guardduty" {
   type        = bool
   default     = true
 }
+
+variable "enable_security_hub" {
+  description = "Enable AWS Security Hub for CIS benchmarks and compliance monitoring"
+  type        = bool
+  default     = true
+}
