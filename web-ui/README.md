@@ -65,25 +65,39 @@ docker push $ACCOUNT_ID.dkr.ecr.us-gov-west-1.amazonaws.com/sre-assistant:latest
 
 ## Deploy to EKS
 
+### Option 1: Helm (Recommended)
+
 ```bash
-# Get Bedrock agent ID
+# Get values
 AGENT_ID=$(cat ../bedrock_agent_id.txt)
-
-# Get AWS account ID
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-
-# Generate Flask secret key
 FLASK_SECRET_KEY=$(python -c 'import os; print(os.urandom(24).hex())')
 
-# Update deployment manifest
-export AWS_ACCOUNT_ID=$ACCOUNT_ID
-export ECR_REGISTRY=$ACCOUNT_ID.dkr.ecr.us-gov-west-1.amazonaws.com
-export BEDROCK_AGENT_ID=$AGENT_ID
-export FLASK_SECRET_KEY=$FLASK_SECRET_KEY
-export ACM_CERTIFICATE_ARN=arn:aws-us-gov:acm:us-gov-west-1:$ACCOUNT_ID:certificate/your-cert-id
-
-envsubst < k8s/deployment.yaml | kubectl apply -f -
+# Deploy with Helm
+helm upgrade --install sre-assistant helm/sre-assistant \
+  --namespace sre-assistant \
+  --create-namespace \
+  --set image.repository=$ACCOUNT_ID.dkr.ecr.us-gov-west-1.amazonaws.com/sre-assistant \
+  --set image.tag=latest \
+  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=arn:aws-us-gov:iam::$ACCOUNT_ID:role/enhanced-eks-cluster-sre-assistant-role \
+  --set bedrock.agentId=$AGENT_ID \
+  --set secret.secretKey=$FLASK_SECRET_KEY \
+  --set ingress.certificateArn=arn:aws-us-gov:acm:us-gov-west-1:$ACCOUNT_ID:certificate/your-cert-id \
+  --set ingress.host=sre-assistant.internal.example.com
 ```
+
+### Option 2: GitLab CI/CD (Automated)
+
+Set GitLab CI/CD variables:
+- `AWS_ACCOUNT_ID`
+- `EKS_CLUSTER_NAME`
+- `POD_IDENTITY_ROLE_ARN`
+- `BEDROCK_AGENT_ID`
+- `FLASK_SECRET_KEY`
+- `ACM_CERTIFICATE_ARN`
+- `INGRESS_HOST`
+
+Push to `develop` or `main` branch - automatic deployment!
 
 ## Create IAM Role for Pod Identity
 
@@ -124,6 +138,28 @@ aws eks create-pod-identity-association \
   --service-account sre-assistant \
   --role-arn arn:aws-us-gov:iam::$ACCOUNT_ID:role/enhanced-eks-cluster-sre-assistant-role \
   --region us-gov-west-1
+```
+
+## Helm Chart Values
+
+Customize `helm/sre-assistant/values.yaml` or use `--set`:
+
+```yaml
+replicaCount: 2
+image:
+  repository: <account-id>.dkr.ecr.us-gov-west-1.amazonaws.com/sre-assistant
+  tag: latest
+bedrock:
+  agentId: <agent-id>
+  region: us-gov-west-1
+ingress:
+  enabled: true
+  host: sre-assistant.internal.example.com
+  certificateArn: <acm-cert-arn>
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
 ```
 
 ## Access Web UI

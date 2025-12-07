@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sre-assistant.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "sre-assistant.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "sre-assistant.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "sre-assistant.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "sre-assistant.serviceAccountName" . }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.targetPort }}
+          protocol: TCP
+        env:
+        - name: AWS_REGION
+          value: {{ .Values.bedrock.region | quote }}
+        - name: AGENT_ID
+          value: {{ .Values.bedrock.agentId | quote }}
+        - name: AGENT_ALIAS_ID
+          value: {{ .Values.bedrock.agentAliasId | quote }}
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "sre-assistant.fullname" . }}-secret
+              key: secret-key
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 10 }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 10 }}

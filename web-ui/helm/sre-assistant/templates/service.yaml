@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sre-assistant.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "sre-assistant.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - port: {{ .Values.service.port }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "sre-assistant.selectorLabels" . | nindent 4 }}

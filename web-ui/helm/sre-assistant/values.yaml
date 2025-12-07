@@ -1,0 +1,69 @@
+replicaCount: 2
+
+image:
+  repository: ""  # Set via --set or CI/CD
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: ""  # Set via --set
+
+namespace:
+  create: true
+  name: sre-assistant
+  istioInjection: true
+
+bedrock:
+  agentId: ""  # Set via --set
+  agentAliasId: "production"
+  region: "us-gov-west-1"
+
+secret:
+  secretKey: ""  # Set via --set or sealed-secrets
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /api/health
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+  host: sre-assistant.internal.example.com
+  certificateArn: ""  # Set via --set
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80

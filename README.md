@@ -67,19 +67,21 @@ For detailed pricing, use the [AWS Pricing Calculator](https://calculator.aws).
 - Terraform >= 1.0
 - kubectl
 
-## Deployment
+## Quick Start
 
 ```bash
+# 1. Deploy infrastructure
 terraform init
-terraform plan
 terraform apply
-```
 
-## Configure kubectl
-
-```bash
+# 2. Configure kubectl
 aws eks update-kubeconfig --region us-gov-west-1 --name enhanced-eks-cluster
+
+# 3. Verify
+kubectl get nodes
 ```
+
+**Complete guide:** See [DEPLOYMENT.md](DEPLOYMENT.md) for Helm charts and GitLab CI/CD setup
 
 ## Verify Installation
 
@@ -445,17 +447,25 @@ See [AI-GETTING-STARTED.md](AI-GETTING-STARTED.md) for setup guide.
 
 ## Documentation
 
+**Getting Started:**
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Complete deployment guide (Terraform + Helm + GitLab CI/CD)
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture specifications
 - [CONSIDERATIONS.md](CONSIDERATIONS.md) - Production readiness checklist
+
+**Security & Compliance:**
 - [SECRETS-MANAGEMENT.md](SECRETS-MANAGEMENT.md) - Secrets management guide
 - [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) - FedRAMP compliance guide
 - [SBOM.md](SBOM.md) - Software Bill of Materials
+
+**Operations:**
 - [DAY2-OPERATIONS.md](DAY2-OPERATIONS.md) - Day 2 operations guide
+- [INCIDENT-MANAGER.md](INCIDENT-MANAGER.md) - On-call management with SMS
+- [CHATBOT-SETUP.md](CHATBOT-SETUP.md) - Teams/Slack integration
+
+**AI-Driven Operations:**
 - [AI-GETTING-STARTED.md](AI-GETTING-STARTED.md) - AI agent setup guide
 - [SRE-RUNBOOKS.md](SRE-RUNBOOKS.md) - Automated runbooks
 - [AI-PLAYBOOKS.md](AI-PLAYBOOKS.md) - Agentic workflows
-- [INCIDENT-MANAGER.md](INCIDENT-MANAGER.md) - On-call management with SMS
-- [CHATBOT-SETUP.md](CHATBOT-SETUP.md) - Teams/Slack integration
 - [web-ui/README.md](web-ui/README.md) - Web chat interface
 
 ## Support
