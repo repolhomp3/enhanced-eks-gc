@@ -101,3 +101,15 @@ variable "prometheus_version" {
   type        = string
   default     = "25.27.0"
 }
+
+variable "enable_vpc_endpoints" {
+  description = "Enable VPC endpoints for private connectivity (no NAT gateway required)"
+  type        = bool
+  default     = false
+}
+
+variable "existing_private_route_table_ids" {
+  description = "List of private route table IDs (required for gateway endpoints when using existing VPC)"
+  type        = list(string)
+  default     = []
+}

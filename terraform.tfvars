@@ -52,3 +52,13 @@ pod_identity_namespaces = ["default"]
 
 # Add more namespaces as needed:
 # pod_identity_namespaces = ["default", "production", "staging", "dev"]
+
+# ============================================================================
+# VPC Endpoints (Private Connectivity)
+# ============================================================================
+# Enable VPC endpoints to operate without NAT gateway
+# Includes: S3, DynamoDB, ECR, EC2, RDS, Lambda, Bedrock, Kinesis, and more
+enable_vpc_endpoints = false
+
+# If using existing VPC with endpoints, provide route table IDs:
+# existing_private_route_table_ids = ["rtb-xxxxx", "rtb-yyyyy", "rtb-zzzzz"]
