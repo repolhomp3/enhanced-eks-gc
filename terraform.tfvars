@@ -94,3 +94,11 @@ secrets_provider_aws_version = "0.3.4"
 
 # Create example secret for demonstration (disable in production)
 create_example_secret = false
+
+# ============================================================================
+# AI-Driven Operations (Bedrock Agent)
+# ============================================================================
+# Enable Amazon Bedrock AI agent for autonomous EKS operations
+# Includes: MCP server, Lambda functions, EventBridge triggers
+# Cost: ~$50-100/month depending on usage
+enable_bedrock_agent = false
