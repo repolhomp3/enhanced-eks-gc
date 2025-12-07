@@ -73,12 +73,18 @@ graph TB
             XRay["AWS X-Ray<br/>(Tracing)"]
             CWL["CloudWatch Logs"]
             ECR["ECR<br/>(Container Registry)"]
-            EBS["EBS Volumes"]
+            EBS["EBS Volumes<br/>(KMS Encrypted)"]
             EFS["EFS"]
             S3["S3 Buckets"]
             Bedrock["Amazon Bedrock"]
             RDS["RDS Databases"]
             DDB["DynamoDB"]
+        end
+        
+        subgraph "Security Services"
+            KMS["KMS<br/>(Encryption Keys)"]
+            GD["GuardDuty<br/>(Threat Detection)"]
+            SH["Security Hub<br/>(CIS Benchmarks)"]
         end
     end
     
@@ -107,6 +113,12 @@ graph TB
     App1 -->|AI/ML| Bedrock
     App1 -->|Database| RDS
     App1 -->|NoSQL| DDB
+    
+    API -->|Secrets| KMS
+    EBS -->|Encryption| KMS
+    API -->|Audit Logs| GD
+    GD -->|Findings| SH
+    CWL -->|Logs| SH
     
     Prom -->|Scrape Metrics| App1
     Kiali -->|Query| Prom
@@ -311,7 +323,93 @@ graph TB
 
 ## 4. Security & IAM Architecture
 
-### 4.1 IAM Roles
+### 4.1 Encryption (FIPS 140-2)
+
+**KMS Keys:**
+
+**EKS Secrets Encryption Key:**
+- Name: enhanced-eks-cluster-eks-secrets
+- Purpose: Encrypt Kubernetes secrets at rest
+- Key Rotation: Enabled (automatic annual rotation)
+- Deletion Window: 30 days
+- Compliance: FIPS 140-2 validated
+
+**EBS Volume Encryption Key:**
+- Name: enhanced-eks-cluster-ebs
+- Purpose: Encrypt all EBS volumes
+- Scope: Region-wide default encryption
+- Key Rotation: Enabled (automatic annual rotation)
+- Deletion Window: 30 days
+- Compliance: FIPS 140-2 validated
+
+**Encrypted Resources:**
+- All Kubernetes secrets (etcd encryption)
+- All EBS volumes (Auto Mode nodes, PVCs)
+- CloudWatch Logs (GuardDuty, Security Hub)
+
+### 4.2 Runtime Security
+
+**GuardDuty for EKS:**
+- Detector: Enabled in us-gov-west-1
+- Data Sources:
+  - EKS audit logs (Kubernetes API activity)
+  - S3 logs
+  - Malware protection (EBS volume scanning)
+- Finding Frequency: 15 minutes
+- Alerting: SNS topic + CloudWatch Logs (90-day retention)
+
+**Threat Detection:**
+- Privilege escalation attempts
+- Container escape attempts
+- Crypto mining activity
+- Malware in EBS volumes
+- Suspicious network activity
+- Unauthorized API calls
+
+**AWS Security Hub:**
+- Standards:
+  - CIS AWS Foundations Benchmark v1.4.0
+  - AWS Foundational Security Best Practices v1.0.0
+- Integrations: GuardDuty findings
+- Alerting: SNS topic for CRITICAL/HIGH findings
+- Logging: CloudWatch Logs (90-day retention, KMS encrypted)
+
+### 4.3 Network Security
+
+**VPC Endpoints (Optional):**
+
+When enabled (`enable_vpc_endpoints = true`), provides private connectivity to 30+ AWS services:
+
+**Interface Endpoints:**
+- Compute: EC2, ECS, Lambda, Auto Scaling
+- Containers: ECR (API + DKR), ECS Agent/Telemetry
+- Storage: EFS
+- Databases: RDS
+- AI/ML: Bedrock (Runtime, Agent, Agent Runtime), SageMaker (API, Runtime)
+- Streaming: Kinesis Streams, Kinesis Firehose
+- Messaging: SQS, SNS, EventBridge
+- Observability: CloudWatch Logs, CloudWatch Monitoring, X-Ray
+- Security: Secrets Manager, KMS, STS, SSM, SSM Messages, EC2 Messages
+- Networking: ELB, Service Discovery, App Mesh
+- Analytics: Athena, Glue
+
+**Gateway Endpoints (Free):**
+- S3
+- DynamoDB
+
+**VPC Endpoints Security Group:**
+- Ingress: HTTPS (443) from VPC CIDR
+- Egress: All traffic
+- Purpose: Secure access to AWS services
+
+**Benefits:**
+- Eliminates NAT gateway requirement
+- Lower latency to AWS services
+- Enhanced security (traffic stays in AWS network)
+- Required for air-gapped environments
+- Cost: ~$50-100/month
+
+### 4.4 IAM Roles
 
 **EKS Cluster Role:**
 - Name: enhanced-eks-cluster-cluster-role
@@ -349,7 +447,7 @@ graph TB
 - Permissions: Full ELB, EC2, WAF management
 - Used by: aws-load-balancer-controller pods
 
-### 4.2 Security Groups
+### 4.5 Security Groups
 
 **Cluster Security Group:**
 - Name: enhanced-eks-cluster-cluster-sg
@@ -359,6 +457,12 @@ graph TB
 **Node Security Group:**
 - Managed by EKS Auto Mode
 - Allows: Pod-to-pod, node-to-control-plane, control-plane-to-node
+
+**VPC Endpoints Security Group (if enabled):**
+- Name: enhanced-eks-cluster-vpc-endpoints
+- Ingress: HTTPS (443) from VPC CIDR
+- Egress: Allow all
+- Purpose: Secure access to AWS service endpoints
 
 ---
 
@@ -628,9 +732,9 @@ CloudWatch Logs (via IAM Pod Identity)
 
 **Integrated Services:**
 - **X-Ray**: Distributed tracing backend
-- **CloudWatch Logs**: Centralized logging
+- **CloudWatch Logs**: Centralized logging (KMS encrypted)
 - **ECR**: Container image registry
-- **EBS**: Block storage
+- **EBS**: Block storage (KMS encrypted by default)
 - **EFS**: Shared file storage
 - **S3**: Object storage
 - **Secrets Manager**: Secret storage
@@ -639,6 +743,9 @@ CloudWatch Logs (via IAM Pod Identity)
 - **SQS**: Message queuing
 - **SNS**: Notifications
 - **Bedrock**: AI/ML model inference
+- **KMS**: Encryption key management (FIPS 140-2)
+- **GuardDuty**: Runtime threat detection
+- **Security Hub**: Compliance monitoring (CIS benchmarks)
 
 ### 12.2 External Endpoints
 
@@ -724,10 +831,15 @@ CloudWatch Logs (via IAM Pod Identity)
 - CloudWatch for logs (AWS-native)
 
 ### 14.4 Security
-- Pod Identity for fine-grained IAM permissions
-- Istio mTLS for service-to-service encryption
-- Private subnets for all workloads
-- Security groups for network isolation
+- **KMS encryption** for secrets and EBS volumes (FIPS 140-2)
+- **GuardDuty** for runtime threat detection
+- **Security Hub** for CIS benchmark compliance
+- **VPC endpoints** for private AWS service connectivity (optional)
+- **Pod Identity** for fine-grained IAM permissions
+- **Istio mTLS** for service-to-service encryption
+- **Private subnets** for all workloads
+- **Security groups** for network isolation
+- **CloudWatch Logs** with KMS encryption (90-day retention)
 
 ---
 

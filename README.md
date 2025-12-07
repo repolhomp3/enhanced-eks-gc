@@ -1,6 +1,6 @@
 # Enhanced EKS Cluster - us-gov-west-1
 
-Production-ready EKS cluster with Auto Mode, KEDA, and Istio for mTLS.
+Production-ready EKS cluster with Auto Mode, KEDA, Istio, and comprehensive security for AWS GovCloud.
 
 ![Architecture Diagram](enhanced-eks-gc.png)
 
@@ -9,17 +9,27 @@ Production-ready EKS cluster with Auto Mode, KEDA, and Istio for mTLS.
 - **EKS Auto Mode**: Automated node provisioning and management
 - **Region**: us-gov-west-1 (AWS GovCloud)
 - **High Availability**: 3 AZs with public/private subnets
+- **Security & Compliance**:
+  - KMS encryption for EKS secrets and EBS volumes (FIPS 140-2)
+  - GuardDuty for EKS runtime threat detection
+  - AWS Security Hub with CIS benchmarks
+  - VPC endpoints for private connectivity (30+ services)
+  - Istio service mesh with automatic mTLS
 - **Add-ons Installed**:
-  - kube-proxy
-  - vpc-cni
-  - coredns
-  - aws-ebs-csi-driver
-  - aws-efs-csi-driver
-  - aws-mountpoint-s3-csi-driver
+  - kube-proxy, vpc-cni, coredns
+  - aws-ebs-csi-driver, aws-efs-csi-driver, aws-mountpoint-s3-csi-driver
   - ADOT (AWS Distro for OpenTelemetry) with X-Ray integration
-  - Istio (service mesh with mTLS)
-- **KEDA**: Kubernetes Event-driven Autoscaling
-- **AWS Load Balancer Controller**: Automatic ALB/NLB provisioning
+- **Observability**:
+  - Prometheus metrics collection
+  - Kiali service mesh visualization
+  - AWS X-Ray distributed tracing
+  - CloudWatch Logs integration
+- **Autoscaling**:
+  - KEDA for event-driven autoscaling
+  - Metrics Server for HPA
+- **Networking**:
+  - AWS Load Balancer Controller for ALB/NLB provisioning
+  - Optional VPC endpoints for NAT-less operation
 
 ## Cost Estimate
 
@@ -27,18 +37,21 @@ Production-ready EKS cluster with Auto Mode, KEDA, and Istio for mTLS.
 
 | Duration | Estimated Cost | Notes |
 |----------|----------------|-------|
-| **2 Days** | $53-62 | Testing/POC |
-| **1 Month** | $800-1,200 | Light production workload |
-| **1 Month** | $1,200-1,800 | Moderate production workload |
+| **2 Days** | $55-65 | Testing/POC |
+| **1 Month** | $850-1,300 | Light production workload |
+| **1 Month** | $1,300-1,900 | Moderate production workload |
 
 **Key Cost Components:**
 - EKS Control Plane: $87.60/month (fixed)
 - NAT Gateway: $98.55/month (1 gateway for cost savings)
 - Auto Mode Compute: $500-800/month (scales with workload)
 - Storage, observability, load balancers: ~$100/month
+- Security (GuardDuty, Security Hub, KMS): ~$40-50/month
+- VPC Endpoints (if enabled): ~$50-100/month
 
 **Cost Optimization:**
 - Single NAT Gateway saves ~$200/month vs 3 NAT Gateways
+- VPC endpoints eliminate NAT gateway costs entirely (optional)
 - Auto Mode optimizes instance selection automatically
 - Use Savings Plans for 30-40% compute savings
 
@@ -87,7 +100,104 @@ kubectl get pods -n istio-system -l app=kiali
 
 # Check Prometheus
 kubectl get pods -n prometheus
+
+# Verify KMS encryption
+aws kms describe-key --key-id alias/enhanced-eks-cluster-eks-secrets --region us-gov-west-1
+
+# Check GuardDuty status
+aws guardduty list-detectors --region us-gov-west-1
+
+# View Security Hub findings
+aws securityhub get-findings --region us-gov-west-1 --max-items 10
+
+# List VPC endpoints (if enabled)
+aws ec2 describe-vpc-endpoints --region us-gov-west-1 --filters "Name=vpc-id,Values=$(terraform output -raw vpc_id)"
 ```
+
+## Security Features
+
+### KMS Encryption (FIPS 140-2)
+
+All Kubernetes secrets and EBS volumes are encrypted at rest with customer-managed KMS keys:
+
+- **EKS Secrets**: Automatic encryption for all Kubernetes secrets
+- **EBS Volumes**: Region-wide default encryption for all volumes
+- **Key Rotation**: Enabled automatically (annual)
+- **Deletion Protection**: 30-day recovery window
+
+### GuardDuty Runtime Security
+
+Continuous threat detection for your EKS cluster:
+
+- **EKS Audit Logs**: Monitors Kubernetes API activity
+- **Malware Detection**: Scans EBS volumes for threats
+- **Threat Detection**: Privilege escalation, crypto mining, container escapes
+- **Alerting**: SNS topic + CloudWatch Logs (90-day retention)
+
+Subscribe to GuardDuty alerts:
+```bash
+aws sns subscribe \
+  --topic-arn $(terraform output -raw guardduty_sns_topic_arn) \
+  --protocol email \
+  --notification-endpoint your-email@example.com \
+  --region us-gov-west-1
+```
+
+### AWS Security Hub (CIS Benchmarks)
+
+Automated compliance monitoring and security posture management:
+
+- **CIS AWS Foundations Benchmark v1.4.0**: 100+ automated checks
+- **AWS Foundational Security Best Practices**: Additional security controls
+- **GuardDuty Integration**: Centralized security findings
+- **Compliance Dashboard**: Real-time compliance status
+
+View compliance status:
+```bash
+# Console: Security Hub → Standards → CIS AWS Foundations Benchmark
+# CLI:
+aws securityhub get-findings \
+  --region us-gov-west-1 \
+  --filters '{"ComplianceStatus":[{"Value":"FAILED","Comparison":"EQUALS"}]}'
+```
+
+Subscribe to Security Hub alerts:
+```bash
+aws sns subscribe \
+  --topic-arn $(terraform output -raw security_hub_sns_topic_arn) \
+  --protocol email \
+  --notification-endpoint your-email@example.com \
+  --region us-gov-west-1
+```
+
+### VPC Endpoints (Private Connectivity)
+
+Enable VPC endpoints to operate without NAT gateway:
+
+```hcl
+# In terraform.tfvars
+enable_vpc_endpoints = true
+```
+
+**30+ Interface Endpoints:**
+- Compute: EC2, ECS, Lambda
+- Containers: ECR (API + DKR)
+- Storage: EFS
+- Databases: RDS, DynamoDB
+- AI/ML: Bedrock (Runtime, Agent, Agent Runtime), SageMaker
+- Streaming: Kinesis, Kinesis Firehose
+- Messaging: SQS, SNS, EventBridge
+- Observability: CloudWatch, X-Ray
+- Security: Secrets Manager, KMS, STS, SSM
+
+**Gateway Endpoints (Free):**
+- S3, DynamoDB
+
+**Benefits:**
+- No NAT gateway required (saves ~$100/month)
+- Lower latency to AWS services
+- Enhanced security (traffic stays in AWS network)
+- Required for air-gapped environments
 
 ## Access Kiali Dashboard
 
@@ -250,3 +360,49 @@ with tracer.start_as_current_span("my-operation"):
 - View Service Map for topology
 - View Traces for request details
 - Analyze latency and errors
+
+## Configuration
+
+All configuration is centralized in `terraform.tfvars`. Key toggles:
+
+```hcl
+# Enable/disable VPC endpoints for private connectivity
+enable_vpc_endpoints = false
+
+# Enable/disable GuardDuty runtime security
+enable_guardduty = true
+
+# Enable/disable Security Hub CIS benchmarks
+enable_security_hub = true
+
+# Namespaces with Pod Identity permissions
+pod_identity_namespaces = ["default"]
+```
+
+## STIG/FedRAMP Compliance
+
+This cluster is designed for GovCloud STIG/FedRAMP compliance:
+
+- ✅ KMS encryption (FIPS 140-2 validated)
+- ✅ GuardDuty runtime monitoring
+- ✅ Security Hub CIS benchmarks
+- ✅ VPC endpoints for private connectivity
+- ✅ Istio mTLS for service-to-service encryption
+- ✅ CloudWatch Logs with KMS encryption
+- ✅ EBS encryption by default
+- ✅ Pod Identity for least-privilege IAM
+
+See [CONSIDERATIONS.md](CONSIDERATIONS.md) for additional hardening steps.
+
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture specifications
+- [CONSIDERATIONS.md](CONSIDERATIONS.md) - Production readiness checklist
+- [SBOM.md](SBOM.md) - Software Bill of Materials
+
+## Support
+
+For issues or questions, refer to:
+- [AWS EKS Best Practices](https://aws.github.io/aws-eks-best-practices/)
+- [Istio Documentation](https://istio.io/latest/docs/)
+- [KEDA Documentation](https://keda.sh/docs/)
