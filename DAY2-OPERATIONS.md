@@ -53,7 +53,11 @@ This document outlines daily operations, monitoring, troubleshooting, and mainte
 - Capacity planning review
 - Disaster recovery testing
 - Security compliance audit
-- Update EKS/addon versions
+- Review available EKS/addon updates
+
+**Quarterly:**
+- EKS version upgrades (as new versions released)
+- Major addon version updates
 
 ---
 
@@ -127,20 +131,19 @@ aws eks update-kubeconfig --region us-gov-west-1 --name enhanced-eks-cluster
 kubectl cluster-info
 ```
 
-**Via Bastion Host:**
+**Via AWS Systems Manager (SSM):**
 ```bash
-# SSH to bastion in VPC
-ssh -i key.pem ec2-user@bastion-ip
-
-# Configure kubectl on bastion
-aws eks update-kubeconfig --region us-gov-west-1 --name enhanced-eks-cluster
-```
-
-**Via AWS Systems Manager:**
-```bash
-# Start session (no SSH keys needed)
+# Start session to bastion/jump host (no SSH keys needed)
 aws ssm start-session --target i-xxxxx --region us-gov-west-1
+
+# Configure kubectl once connected
+aws eks update-kubeconfig --region us-gov-west-1 --name enhanced-eks-cluster
+
+# Verify access
+kubectl cluster-info
 ```
+
+**Note:** SSH is an anti-pattern. Always use SSM Session Manager for secure, audited access without SSH keys or bastion security groups.
 
 ---
 
@@ -507,7 +510,9 @@ kubectl get nodes --watch
 
 ## Maintenance Windows
 
-### Monthly EKS Version Upgrade
+### Quarterly EKS Version Upgrade
+
+**Note:** EKS releases ~3-4 new Kubernetes versions per year. Plan upgrades quarterly or as needed.
 
 **Preparation (Week 1):**
 ```bash
@@ -633,7 +638,7 @@ aws guardduty list-findings --detector-id <id> --region us-gov-west-1
 
 ## Capacity Planning
 
-### Monthly Review
+### Quarterly Review
 
 **Metrics to Track:**
 ```bash
