@@ -55,6 +55,25 @@ spec:
 - Retention: 90 days (CloudWatch default)
 - Cost: ~$0.50/GB ingested + $0.03/GB stored
 
+**✅ CloudTrail (IMPLEMENTED)**
+- All API calls logged (management + data events)
+- S3 bucket with 7-year retention (Glacier lifecycle)
+- CloudWatch Logs integration (90-day retention)
+- KMS encryption for log files
+- Log file validation enabled
+- API call rate insights enabled
+- Toggle: `enable_cloudtrail = true` in terraform.tfvars
+- Cost: ~$5-10/month
+
+**✅ VPC Flow Logs (IMPLEMENTED)**
+- Dual destination: CloudWatch Logs + S3
+- S3 with Parquet format and hourly partitions
+- KMS encryption for both destinations
+- CloudWatch retention: 30 days
+- S3 retention: 90 days
+- Toggle: `enable_vpc_flow_logs = true` in terraform.tfvars
+- Cost: ~$10-20/month
+
 **✅ GuardDuty for EKS (IMPLEMENTED)**
 - Runtime threat detection enabled
 - EKS audit logs monitoring
@@ -131,9 +150,24 @@ spec:
     type: Container
 ```
 
-### 4. Backup Strategy
+### 4. Backup & Disaster Recovery
 
-**Velero for Cluster Backups:**
+**✅ Disaster Recovery Plan (IMPLEMENTED)**
+- RTO: 4 hours, RPO: 1 hour
+- 5 disaster scenarios documented
+- Backup strategies for all components
+- Monthly/quarterly/annual testing schedule
+- See [DISASTER-RECOVERY.md](DISASTER-RECOVERY.md)
+
+**✅ Incident Response Plan (IMPLEMENTED)**
+- 5-phase response process (Detection → Recovery → Post-Incident)
+- P0-P3 severity classification with response times
+- Security and operational incident procedures
+- Forensics and evidence collection
+- Quarterly testing schedule
+- See [INCIDENT-RESPONSE.md](INCIDENT-RESPONSE.md)
+
+**Velero for Cluster Backups (Optional):**
 ```bash
 # Install Velero
 helm install velero vmware-tanzu/velero \
@@ -142,7 +176,7 @@ helm install velero vmware-tanzu/velero \
   --set configuration.backupStorageLocation.config.region=us-gov-west-1
 ```
 
-**EBS Snapshot Lifecycle:**
+**EBS Snapshot Lifecycle (Optional):**
 ```hcl
 resource "aws_dlm_lifecycle_policy" "ebs_backup" {
   description        = "EBS snapshot lifecycle"
@@ -172,7 +206,25 @@ resource "aws_dlm_lifecycle_policy" "ebs_backup" {
 
 ### 5. Monitoring & Alerting
 
-**AlertManager Configuration:**
+**✅ AWS Systems Manager Incident Manager (IMPLEMENTED)**
+- On-call rotation with SMS alerts
+- Engagement plans with escalation policies
+- Response plans for automated runbooks
+- CloudWatch alarm integration
+- Toggle: `enable_incident_manager = true` in terraform.tfvars
+- Cost: $3.50/month per contact + SMS charges
+- See [INCIDENT-MANAGER.md](INCIDENT-MANAGER.md)
+
+**✅ AWS Chatbot (IMPLEMENTED)**
+- Microsoft Teams and Slack integration
+- Real-time alerts (FREE - no per-message cost)
+- EventBridge integration
+- SNS topic subscriptions
+- Toggle: `enable_chatbot = true` in terraform.tfvars
+- Cost: FREE
+- See [CHATBOT-SETUP.md](CHATBOT-SETUP.md)
+
+**AlertManager Configuration (Optional):**
 ```yaml
 # Add to Prometheus Helm values
 alertmanager:
@@ -394,16 +446,16 @@ kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/
 ## 📋 Compliance Checklist (GovCloud)
 
 ### FedRAMP Requirements:
-- [ ] Enable CloudTrail for all API calls
-- [ ] Enable VPC Flow Logs
+- [✅] Enable CloudTrail for all API calls (IMPLEMENTED)
+- [✅] Enable VPC Flow Logs (IMPLEMENTED)
 - [✅] Enable GuardDuty for EKS (IMPLEMENTED)
 - [✅] Implement least privilege IAM (Pod Identity implemented)
 - [✅] Enable secrets encryption with KMS (IMPLEMENTED)
 - [✅] Configure audit logging (EKS control plane logs - IMPLEMENTED)
 - [✅] Implement network segmentation (VPC, subnets, security groups)
 - [✅] Regular vulnerability scanning (Trivy in CI/CD)
-- [ ] Incident response plan
-- [ ] Disaster recovery testing
+- [✅] Incident response plan (IMPLEMENTED)
+- [✅] Disaster recovery testing (IMPLEMENTED)
 
 ### STIG Compliance:
 - [✅] CIS Kubernetes Benchmark (Security Hub automated)
@@ -455,19 +507,22 @@ kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/
 
 | Feature | Monthly Cost (GovCloud) | Status | Priority |
 |---------|------------------------|--------|----------|
-| KMS Keys (2) | +$2 | ✅ Implemented | High |
+| KMS Keys (3) | +$3 | ✅ Implemented | High |
 | GuardDuty | +$30-50 | ✅ Implemented | High |
 | Security Hub | +$10-15 | ✅ Implemented | High |
+| CloudTrail | +$5-10 | ✅ Implemented | High |
+| VPC Flow Logs | +$10-20 | ✅ Implemented | High |
 | VPC Endpoints (if enabled) | +$50-100 | ✅ Optional | High |
+| Incident Manager (if enabled) | +$8-15 | ✅ Optional | High |
+| Chatbot (if enabled) | FREE | ✅ Optional | High |
+| Bedrock AI (if enabled) | +$50-100 | ✅ Optional | Medium |
 | 3 NAT Gateways (HA) | +$197 | ❌ Not implemented | High |
-| VPC Flow Logs | +$10-20 | ❌ Not implemented | High |
 | Velero (S3 storage) | +$5-10 | ❌ Not implemented | High |
 | Kubecost | Free tier | ❌ Not implemented | Medium |
-| cert-manager | Free | ❌ Not implemented | Medium |
-| ArgoCD | Free | ❌ Not implemented | Medium |
 | Grafana (EBS) | +$10 | ❌ Not implemented | Low |
-| **Current Additional** | **~$42-67/month** | | |
-| **With All Additions** | **~$314-399/month** | | |
+| **Current Additional** | **~$58-98/month** | | |
+| **With All Optional** | **~$166-298/month** | | |
+| **With All Additions** | **~$378-505/month** | | |
 
 ---
 

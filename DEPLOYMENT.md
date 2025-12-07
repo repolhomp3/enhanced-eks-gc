@@ -39,7 +39,22 @@ aws eks update-kubeconfig --region us-gov-west-1 --name enhanced-eks-cluster
 kubectl get nodes
 ```
 
-### 3. Enable AI Operations (Optional)
+### 3. Enable CloudTrail and VPC Flow Logs (Recommended)
+
+```hcl
+# terraform.tfvars (enabled by default)
+enable_cloudtrail = true
+enable_vpc_flow_logs = true
+```
+
+```bash
+terraform apply
+```
+
+**CloudTrail:** 7-year retention, KMS encrypted, log file validation
+**VPC Flow Logs:** Dual destination (CloudWatch + S3), Parquet format
+
+### 4. Enable AI Operations (Optional)
 
 #### Build Lambda Functions
 
@@ -68,7 +83,7 @@ AGENT_ID=$(aws bedrock-agent create-agent ...)
 echo $AGENT_ID > bedrock_agent_id.txt
 ```
 
-### 4. Enable Incident Manager (Optional)
+### 5. Enable Incident Manager (Optional)
 
 ```hcl
 # terraform.tfvars
@@ -82,7 +97,7 @@ terraform apply
 
 **Activate SMS channels:** See [INCIDENT-MANAGER.md](INCIDENT-MANAGER.md)
 
-### 5. Enable AWS Chatbot (Optional)
+### 6. Enable AWS Chatbot (Optional)
 
 ```hcl
 # terraform.tfvars
@@ -98,7 +113,7 @@ terraform apply
 
 **Setup:** See [CHATBOT-SETUP.md](CHATBOT-SETUP.md)
 
-### 6. Create AWS Secrets Manager Secret (for External Secrets or CSI Driver)
+### 7. Create AWS Secrets Manager Secret (for External Secrets or CSI Driver)
 
 ```bash
 # Generate secret key
@@ -112,7 +127,7 @@ aws secretsmanager create-secret \
   --region us-gov-west-1
 ```
 
-### 7. Deploy Web UI
+### 8. Deploy Web UI
 
 #### Option A: Helm with Native Secret (Quick Start)
 
@@ -199,6 +214,23 @@ Go to Settings → CI/CD → Variables:
 
 ## Verification
 
+### Check Audit & Compliance
+
+```bash
+# CloudTrail
+aws cloudtrail describe-trails --region us-gov-west-1
+aws cloudtrail get-trail-status --name enhanced-eks-cluster-trail --region us-gov-west-1
+
+# VPC Flow Logs
+aws ec2 describe-flow-logs --region us-gov-west-1 --filter "Name=resource-id,Values=$(terraform output -raw vpc_id)"
+
+# View CloudTrail logs
+aws logs tail /aws/cloudtrail/enhanced-eks-cluster --follow --region us-gov-west-1
+
+# View VPC Flow Logs
+aws logs tail /aws/vpc/flowlogs/enhanced-eks-cluster --follow --region us-gov-west-1
+```
+
 ### Check Infrastructure
 
 ```bash
@@ -229,6 +261,38 @@ aws guardduty list-detectors --region us-gov-west-1
 
 # Security Hub
 aws securityhub describe-hub --region us-gov-west-1
+```
+
+### Check Incident Manager
+
+```bash
+# Contacts
+aws ssm-contacts list-contacts --region us-gov-west-1
+
+# Response plans
+aws ssm-incidents list-response-plans --region us-gov-west-1
+
+# Test engagement
+aws ssm-contacts start-engagement \
+  --contact-id <contact-id> \
+  --sender test \
+  --subject "Test Alert" \
+  --content "Testing incident manager" \
+  --region us-gov-west-1
+```
+
+### Check Chatbot
+
+```bash
+# Chatbot configurations
+aws chatbot describe-slack-channel-configurations --region us-gov-west-1
+aws chatbot describe-microsoft-teams-channel-configurations --region us-gov-west-1
+
+# Test SNS notification
+aws sns publish \
+  --topic-arn $(terraform output -raw chatbot_sns_topic_arn) \
+  --message "Test alert from EKS cluster" \
+  --region us-gov-west-1
 ```
 
 ### Check AI Operations
@@ -410,13 +474,16 @@ gitlab-runner exec docker build
 | NAT Gateway | $98.55 |
 | Auto Mode Compute | $500-800 |
 | Storage/Observability | $100 |
-| Security (GuardDuty, Security Hub) | $40-50 |
+| Security (GuardDuty, Security Hub, KMS) | $40-50 |
+| CloudTrail | $5-10 |
+| VPC Flow Logs | $10-20 |
 | VPC Endpoints (optional) | $50-100 |
 | AI Operations (optional) | $50-100 |
 | Incident Manager (optional) | $8-15 |
 | Chatbot (optional) | FREE |
 | Web UI | $30-50 |
-| **Total** | **$850-1,300/month** |
+| **Total (Base)** | **$870-1,350/month** |
+| **Total (All Optional)** | **$978-1,565/month** |
 
 ## Support
 

@@ -805,6 +805,22 @@ CloudWatch Logs (via IAM Pod Identity)
 - Log Groups: Per namespace/pod
 - Retention: Configurable (default 7 days)
 
+**CloudTrail:**
+- All API calls logged (management + data events)
+- S3 bucket with 7-year retention (Glacier lifecycle)
+- CloudWatch Logs integration (90-day retention)
+- KMS encryption for log files
+- Log file validation enabled
+- Toggle: `enable_cloudtrail = true` in terraform.tfvars
+
+**VPC Flow Logs:**
+- Dual destination: CloudWatch Logs + S3
+- S3 with Parquet format and hourly partitions
+- KMS encryption for both destinations
+- CloudWatch retention: 30 days
+- S3 retention: 90 days
+- Toggle: `enable_vpc_flow_logs = true` in terraform.tfvars
+
 ---
 
 ## 11. Component Placement Map
@@ -854,6 +870,8 @@ CloudWatch Logs (via IAM Pod Identity)
 **Integrated Services:**
 - **X-Ray**: Distributed tracing backend
 - **CloudWatch Logs**: Centralized logging (KMS encrypted)
+- **CloudTrail**: API call logging (7-year retention)
+- **VPC Flow Logs**: Network traffic logging
 - **ECR**: Container image registry
 - **EBS**: Block storage (KMS encrypted by default)
 - **EFS**: Shared file storage
@@ -863,10 +881,12 @@ CloudWatch Logs (via IAM Pod Identity)
 - **DynamoDB**: NoSQL database
 - **SQS**: Message queuing
 - **SNS**: Notifications
-- **Bedrock**: AI/ML model inference
+- **Bedrock**: AI/ML model inference (optional)
 - **KMS**: Encryption key management (FIPS 140-2)
 - **GuardDuty**: Runtime threat detection
 - **Security Hub**: Compliance monitoring (CIS benchmarks)
+- **Incident Manager**: On-call management with SMS alerts (optional)
+- **Chatbot**: Teams/Slack integration (optional, FREE)
 
 ### 12.2 External Endpoints
 
@@ -972,14 +992,19 @@ CloudWatch Logs (via IAM Pod Identity)
 4. EKS cluster with Auto Mode
 5. EKS add-ons (kube-proxy, vpc-cni, coredns, CSI drivers, ADOT)
 6. GuardDuty and Security Hub
-7. VPC endpoints (if enabled)
-8. Istio (base → istiod → gateway)
-9. KEDA
-10. Prometheus
-11. Kiali
-12. AWS Load Balancer Controller
-13. Metrics Server
-14. External Secrets Operator OR Secrets Store CSI Driver (if enabled)
+7. CloudTrail (if enabled)
+8. VPC Flow Logs (if enabled)
+9. VPC endpoints (if enabled)
+10. Incident Manager (if enabled)
+11. Chatbot (if enabled)
+12. Bedrock Agent infrastructure (if enabled)
+13. Istio (base → istiod → gateway)
+14. KEDA
+15. Prometheus
+16. Kiali
+17. AWS Load Balancer Controller
+18. Metrics Server
+19. External Secrets Operator OR Secrets Store CSI Driver (if enabled)
 
 ---
 

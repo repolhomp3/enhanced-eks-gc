@@ -92,7 +92,7 @@ kubectl get pods --all-namespaces --field-selector=status.phase!=Running,status.
 kubectl get pods --all-namespaces --sort-by='.status.containerStatuses[0].restartCount' | tail -20
 ```
 
-**3. Security Alerts**
+**3. Security & Audit Logs**
 ```bash
 # GuardDuty findings (last 24 hours)
 aws guardduty list-findings \
@@ -105,6 +105,16 @@ aws securityhub get-findings \
   --filters '{"SeverityLabel":[{"Value":"CRITICAL","Comparison":"EQUALS"}],"RecordState":[{"Value":"ACTIVE","Comparison":"EQUALS"}]}' \
   --region us-gov-west-1 \
   --max-items 10
+
+# CloudTrail recent API calls
+aws cloudtrail lookup-events \
+  --max-results 10 \
+  --region us-gov-west-1
+
+# VPC Flow Logs (check for anomalies)
+aws logs tail /aws/vpc/flowlogs/enhanced-eks-cluster \
+  --since 1h \
+  --region us-gov-west-1
 ```
 
 **4. Resource Utilization**
@@ -167,6 +177,8 @@ kubectl port-forward -n prometheus svc/prometheus-server 9090:80
 - EKS Control Plane Logs: `/aws/eks/enhanced-eks-cluster/cluster`
 - GuardDuty Findings: `/aws/guardduty/enhanced-eks-cluster`
 - Security Hub Findings: `/aws/securityhub/enhanced-eks-cluster`
+- CloudTrail Logs: `/aws/cloudtrail/enhanced-eks-cluster`
+- VPC Flow Logs: `/aws/vpc/flowlogs/enhanced-eks-cluster`
 
 **4. AWS X-Ray**
 - Service Map: Shows distributed tracing topology
@@ -177,6 +189,7 @@ kubectl port-forward -n prometheus svc/prometheus-server 9090:80
 **SNS Topics:**
 - GuardDuty Alerts: `enhanced-eks-cluster-guardduty-alerts`
 - Security Hub Alerts: `enhanced-eks-cluster-security-hub-findings`
+- Chatbot Alerts: `enhanced-eks-cluster-chatbot-alerts` (if enabled)
 
 **Subscribe to Alerts:**
 ```bash
@@ -193,6 +206,26 @@ aws sns subscribe \
   --protocol email \
   --notification-endpoint sre-team@example.com \
   --region us-gov-west-1
+
+# Chatbot (Teams/Slack - if enabled)
+# Configured via AWS Chatbot console
+# See CHATBOT-SETUP.md for details
+```
+
+**Incident Manager (if enabled):**
+```bash
+# On-call contacts
+aws ssm-contacts list-contacts --region us-gov-west-1
+
+# Test engagement
+aws ssm-contacts start-engagement \
+  --contact-id <contact-id> \
+  --sender test \
+  --subject "Test Alert" \
+  --content "Testing incident manager" \
+  --region us-gov-west-1
+
+# See INCIDENT-MANAGER.md for full setup
 ```
 
 ### Critical Alerts
@@ -576,22 +609,32 @@ kubectl get nodes -o custom-columns=NAME:.metadata.name,AMI:.status.nodeInfo.osI
 - Multiple nodes NotReady
 - Production application completely down
 - Active security breach (GuardDuty CRITICAL)
+- Data breach or ransomware detected
 
 **P1 - High (1 hour response):**
 - Single node NotReady
 - Application degraded performance
 - GuardDuty HIGH findings
 - PVC full causing pod failures
+- Unauthorized access attempts
 
 **P2 - Medium (4 hour response):**
 - Non-critical pod failures
 - Performance degradation
 - Security Hub compliance failures
+- CloudTrail anomalies
 
 **P3 - Low (Next business day):**
 - Documentation updates
 - Non-urgent optimization
 - Informational alerts
+
+**See [INCIDENT-RESPONSE.md](INCIDENT-RESPONSE.md) for:**
+- Complete 5-phase incident response process
+- Security incident procedures (GuardDuty, data breach, ransomware)
+- Operational incident procedures (control plane, pod failures)
+- Forensics and evidence collection
+- Communication templates and escalation paths
 
 ### Incident Response Workflow
 
@@ -630,9 +673,11 @@ aws guardduty list-findings --detector-id <id> --region us-gov-west-1
 - Update runbooks
 
 **6. Post-Mortem**
-- Document incident
+- Document incident (see [INCIDENT-RESPONSE.md](INCIDENT-RESPONSE.md))
 - Identify root cause
 - Implement preventive measures
+- Update runbooks
+- Conduct quarterly incident response testing
 
 ---
 
@@ -752,9 +797,22 @@ terraform output pod_identity_role_arn
 
 ## Additional Resources
 
+**Architecture & Operations:**
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Infrastructure architecture
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment guide
 - [CONSIDERATIONS.md](CONSIDERATIONS.md) - Production readiness
+
+**Security & Compliance:**
 - [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) - Compliance guide
 - [SECRETS-MANAGEMENT.md](SECRETS-MANAGEMENT.md) - Secrets guide
+- [INCIDENT-RESPONSE.md](INCIDENT-RESPONSE.md) - Incident response plan
+- [DISASTER-RECOVERY.md](DISASTER-RECOVERY.md) - Disaster recovery plan
+
+**Incident Management:**
+- [INCIDENT-MANAGER.md](INCIDENT-MANAGER.md) - On-call management with SMS
+- [CHATBOT-SETUP.md](CHATBOT-SETUP.md) - Teams/Slack integration
+
+**AI-Driven Operations:**
+- [AI-GETTING-STARTED.md](AI-GETTING-STARTED.md) - AI agent setup
 - [SRE-RUNBOOKS.md](SRE-RUNBOOKS.md) - Automated runbooks
 - [AI-PLAYBOOKS.md](AI-PLAYBOOKS.md) - AI-driven workflows
