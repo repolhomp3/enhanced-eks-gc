@@ -113,3 +113,9 @@ variable "existing_private_route_table_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "enable_guardduty" {
+  description = "Enable GuardDuty for EKS runtime security (STIG compliance)"
+  type        = bool
+  default     = true
+}

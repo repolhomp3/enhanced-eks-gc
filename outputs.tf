@@ -88,3 +88,13 @@ output "kms_ebs_key_arn" {
   description = "KMS key ARN for EBS volume encryption"
   value       = aws_kms_key.ebs.arn
 }
+
+output "guardduty_detector_id" {
+  description = "GuardDuty detector ID"
+  value       = var.enable_guardduty ? aws_guardduty_detector.main.id : null
+}
+
+output "guardduty_sns_topic_arn" {
+  description = "SNS topic ARN for GuardDuty alerts"
+  value       = var.enable_guardduty ? aws_sns_topic.guardduty_alerts[0].arn : null
+}

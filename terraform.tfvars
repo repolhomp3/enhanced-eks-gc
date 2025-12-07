@@ -62,3 +62,10 @@ enable_vpc_endpoints = false
 
 # If using existing VPC with endpoints, provide route table IDs:
 # existing_private_route_table_ids = ["rtb-xxxxx", "rtb-yyyyy", "rtb-zzzzz"]
+
+# ============================================================================
+# GuardDuty Runtime Security (STIG Compliance)
+# ============================================================================
+# Enable GuardDuty for EKS threat detection
+# Detects: privilege escalation, container escapes, crypto mining, malware
+enable_guardduty = true
