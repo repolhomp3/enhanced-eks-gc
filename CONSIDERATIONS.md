@@ -28,13 +28,17 @@ This document outlines additional considerations for production deployment beyon
 - Access via: VPN, Direct Connect, or bastion host
 - Consider: Restrict public access to specific CIDRs
 
-**Network Policies:**
+**✅ Network Policies (VPC CNI Ready)**
+- VPC CNI supports native Kubernetes NetworkPolicy
+- No additional CNI required (Calico not needed)
+- Define policies when deploying application workloads
+- Example default-deny-all policy:
 ```yaml
-# Deploy Calico or use VPC CNI network policies
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-all
+  namespace: production
 spec:
   podSelector: {}
   policyTypes:
