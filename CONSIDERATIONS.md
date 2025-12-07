@@ -9,9 +9,18 @@ This document outlines additional considerations for production deployment beyon
 **✅ KMS Encryption for Secrets (IMPLEMENTED)**
 - EKS secrets encryption with customer-managed KMS key
 - EBS volume encryption enabled by default
+- Secrets Manager encryption with KMS
 - FIPS 140-2 validated encryption
 - Automatic key rotation enabled
 - Toggle: Always enabled
+
+**✅ Secrets Management (IMPLEMENTED)**
+- AWS Secrets Manager with KMS encryption
+- External Secrets Operator (default - NOT FedRAMP authorized)
+- Secrets Store CSI Driver (FedRAMP compliant alternative)
+- Pod Identity for secure access
+- Toggle: `enable_external_secrets` or `enable_secrets_store_csi`
+- See [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) for comparison
 
 **Private EKS Endpoint:**
 - Current: Public + Private access enabled

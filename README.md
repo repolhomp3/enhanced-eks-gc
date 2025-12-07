@@ -15,6 +15,8 @@ Production-ready EKS cluster with Auto Mode, KEDA, Istio, and comprehensive secu
   - AWS Security Hub with CIS benchmarks
   - VPC endpoints for private connectivity (30+ services)
   - Istio service mesh with automatic mTLS
+  - AWS Secrets Manager with KMS encryption
+  - External Secrets Operator OR Secrets Store CSI Driver
 - **Add-ons Installed**:
   - kube-proxy, vpc-cni, coredns
   - aws-ebs-csi-driver, aws-efs-csi-driver, aws-mountpoint-s3-csi-driver
@@ -361,6 +363,24 @@ with tracer.start_as_current_span("my-operation"):
 - View Traces for request details
 - Analyze latency and errors
 
+## Secrets Management
+
+Two options for secrets management:
+
+### Option 1: External Secrets Operator (Default)
+- ⚠️ NOT FedRAMP authorized
+- Better developer experience
+- Automatic sync from Secrets Manager to Kubernetes
+- Declarative ExternalSecret resources
+
+### Option 2: Secrets Store CSI Driver (FedRAMP Compliant)
+- ✅ AWS-supported, FedRAMP compliant
+- Secrets mounted as files in pods
+- Direct integration with Pod Identity
+- Required for strict FedRAMP compliance
+
+See [SECRETS-MANAGEMENT.md](SECRETS-MANAGEMENT.md) and [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) for detailed comparison.
+
 ## Configuration
 
 All configuration is centralized in `terraform.tfvars`. Key toggles:
@@ -374,6 +394,10 @@ enable_guardduty = true
 
 # Enable/disable Security Hub CIS benchmarks
 enable_security_hub = true
+
+# Secrets management (choose one)
+enable_external_secrets = true   # NOT FedRAMP authorized
+enable_secrets_store_csi = false # FedRAMP compliant alternative
 
 # Namespaces with Pod Identity permissions
 pod_identity_namespaces = ["default"]
@@ -398,6 +422,8 @@ See [CONSIDERATIONS.md](CONSIDERATIONS.md) for additional hardening steps.
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture specifications
 - [CONSIDERATIONS.md](CONSIDERATIONS.md) - Production readiness checklist
+- [SECRETS-MANAGEMENT.md](SECRETS-MANAGEMENT.md) - Secrets management guide
+- [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) - FedRAMP compliance guide
 - [SBOM.md](SBOM.md) - Software Bill of Materials
 
 ## Support

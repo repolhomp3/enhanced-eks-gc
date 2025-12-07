@@ -319,6 +319,35 @@ graph TB
 - metrics-server: 2 replicas
 - Function: Resource metrics for HPA and kubectl top
 
+### 3.8 Secrets Management (Optional)
+
+**Option 1: External Secrets Operator (Helm-Deployed)**
+
+**Namespace: external-secrets**
+
+**Status:** ⚠️ NOT FedRAMP authorized
+
+**Components:**
+- external-secrets-operator: 2 replicas
+- external-secrets-webhook: 2 replicas
+- Function: Sync secrets from AWS Secrets Manager to Kubernetes
+- IAM: Pod Identity for Secrets Manager access
+- ClusterSecretStore: Pre-configured for AWS Secrets Manager
+
+**Option 2: Secrets Store CSI Driver (Helm-Deployed)**
+
+**Namespace: kube-system**
+
+**Status:** ✅ AWS-supported, FedRAMP compliant
+
+**Components:**
+- secrets-store-csi-driver: DaemonSet (on all nodes)
+- secrets-provider-aws: DaemonSet (on all nodes)
+- Function: Mount secrets from AWS Secrets Manager as volumes
+- IAM: Pod Identity for Secrets Manager access
+
+**See [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) for detailed comparison.**
+
 ---
 
 ## 4. Security & IAM Architecture
@@ -342,9 +371,17 @@ graph TB
 - Deletion Window: 30 days
 - Compliance: FIPS 140-2 validated
 
+**Secrets Manager Encryption Key:**
+- Name: enhanced-eks-cluster-secrets-manager
+- Purpose: Encrypt secrets in AWS Secrets Manager
+- Key Rotation: Enabled (automatic annual rotation)
+- Deletion Window: 30 days
+- Compliance: FIPS 140-2 validated
+
 **Encrypted Resources:**
 - All Kubernetes secrets (etcd encryption)
 - All EBS volumes (Auto Mode nodes, PVCs)
+- All Secrets Manager secrets
 - CloudWatch Logs (GuardDuty, Security Hub)
 
 ### 4.2 Runtime Security
@@ -409,7 +446,84 @@ When enabled (`enable_vpc_endpoints = true`), provides private connectivity to 3
 - Required for air-gapped environments
 - Cost: ~$50-100/month
 
-### 4.4 IAM Roles
+### 4.6 Secrets Management
+
+**AWS Secrets Manager:**
+- Service: AWS Secrets Manager (FedRAMP High)
+- Encryption: Customer-managed KMS key (FIPS 140-2)
+- Access: IAM Pod Identity
+- Rotation: Automatic (90-day recommended)
+- Audit: CloudTrail logging
+
+**Option 1: External Secrets Operator**
+
+**Status:** ⚠️ NOT FedRAMP authorized (open-source CNCF project)
+
+**IAM Role:**
+- Name: enhanced-eks-cluster-external-secrets
+- Permissions:
+  - secretsmanager:GetSecretValue
+  - secretsmanager:DescribeSecret
+  - secretsmanager:ListSecrets (scoped to cluster prefix)
+  - kms:Decrypt (Secrets Manager KMS key)
+- Used by: external-secrets pods via Pod Identity
+
+**Architecture:**
+```
+AWS Secrets Manager (✅ FedRAMP)
+    ↓ (Pod Identity + TLS)
+External Secrets Operator (❌ Not FedRAMP)
+    ↓
+Kubernetes Secrets (✅ KMS encrypted)
+    ↓
+Application Pods
+```
+
+**Benefits:**
+- Automatic sync (1-hour default)
+- Declarative ExternalSecret resources
+- Environment variables or volume mounts
+- Better developer experience
+
+**Trade-offs:**
+- Requires ATO justification for FedRAMP
+- Open-source component (auditable)
+- Only orchestrates - doesn't store secrets
+
+**Option 2: Secrets Store CSI Driver**
+
+**Status:** ✅ AWS-supported, FedRAMP compliant
+
+**Architecture:**
+```
+AWS Secrets Manager (✅ FedRAMP)
+    ↓ (Pod Identity + TLS)
+Secrets Store CSI Driver (✅ Kubernetes SIG)
+    ↓
+Volume Mount in Pod
+    ↓
+Application Reads Files
+```
+
+**Benefits:**
+- Only FedRAMP authorized components
+- AWS officially supports this approach
+- Automatic rotation support
+- No third-party operators
+
+**Trade-offs:**
+- Secrets only as volume mounts (not env vars by default)
+- Application must read from files
+- More complex pod configuration
+
+**Recommendation:**
+- **Development/Staging:** External Secrets Operator
+- **Production (Moderate):** External Secrets with ATO justification
+- **Production (Strict FedRAMP):** Secrets Store CSI Driver
+
+See [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) for detailed comparison.
+
+### 4.7 IAM Roles
 
 **EKS Cluster Role:**
 - Name: enhanced-eks-cluster-cluster-role
@@ -446,6 +560,13 @@ When enabled (`enable_vpc_endpoints = true`), provides private connectivity to 3
 - Name: enhanced-eks-cluster-lb-controller
 - Permissions: Full ELB, EC2, WAF management
 - Used by: aws-load-balancer-controller pods
+
+**External Secrets Operator Role (if enabled):**
+- Name: enhanced-eks-cluster-external-secrets
+- Permissions:
+  - Secrets Manager: GetSecretValue, DescribeSecret (scoped to cluster prefix)
+  - KMS: Decrypt (Secrets Manager key)
+- Used by: external-secrets pods via Pod Identity
 
 ### 4.5 Security Groups
 
@@ -737,7 +858,7 @@ CloudWatch Logs (via IAM Pod Identity)
 - **EBS**: Block storage (KMS encrypted by default)
 - **EFS**: Shared file storage
 - **S3**: Object storage
-- **Secrets Manager**: Secret storage
+- **Secrets Manager**: Secret storage (KMS encrypted, FedRAMP High)
 - **RDS**: Database connectivity
 - **DynamoDB**: NoSQL database
 - **SQS**: Message queuing
@@ -846,15 +967,19 @@ CloudWatch Logs (via IAM Pod Identity)
 ## 15. Deployment Order
 
 1. VPC and networking (subnets, IGW, NAT, route tables)
-2. IAM roles (cluster, node, pod identity)
-3. EKS cluster with Auto Mode
-4. EKS add-ons (kube-proxy, vpc-cni, coredns, CSI drivers, ADOT)
-5. Istio (base → istiod → gateway)
-6. KEDA
-7. Prometheus
-8. Kiali
-9. AWS Load Balancer Controller
-10. Metrics Server
+2. KMS keys (EKS secrets, EBS, Secrets Manager)
+3. IAM roles (cluster, node, pod identity)
+4. EKS cluster with Auto Mode
+5. EKS add-ons (kube-proxy, vpc-cni, coredns, CSI drivers, ADOT)
+6. GuardDuty and Security Hub
+7. VPC endpoints (if enabled)
+8. Istio (base → istiod → gateway)
+9. KEDA
+10. Prometheus
+11. Kiali
+12. AWS Load Balancer Controller
+13. Metrics Server
+14. External Secrets Operator OR Secrets Store CSI Driver (if enabled)
 
 ---
 
