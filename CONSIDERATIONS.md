@@ -22,11 +22,13 @@ This document outlines additional considerations for production deployment beyon
 - Toggle: `enable_external_secrets` or `enable_secrets_store_csi`
 - See [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) for comparison
 
-**Private EKS Endpoint:**
-- Current: Public + Private access enabled
-- Production: Set `endpoint_public_access = false` in main.tf
-- Access via: VPN, Direct Connect, or bastion host
-- Consider: Restrict public access to specific CIDRs
+**Private EKS Endpoint (Production):**
+- Current: Public + Private access enabled (for development)
+- Production: Disable public access after TGW VPN setup
+- Set `endpoint_public_access = false` in main.tf
+- Access via: TGW VPN, Direct Connect, or bastion host
+- Alternative: Restrict public access to specific CIDRs
+- Status: Deferred until TGW VPN infrastructure ready
 
 **✅ Network Policies (VPC CNI Ready)**
 - VPC CNI supports native Kubernetes NetworkPolicy
