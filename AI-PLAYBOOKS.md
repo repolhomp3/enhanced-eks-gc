@@ -7,7 +7,7 @@ Bedrock Claude agent workflows for autonomous EKS operations via MCP.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     Bedrock Claude Agent                     │
-│  (anthropic.claude-3-5-sonnet-20241022-v2:0)                │
+│  (anthropic.claude-3-sonnet-20240229-v1:0)                │
 └─────────────────────┬───────────────────────────────────────┘
                       │
                       ▼
@@ -67,7 +67,7 @@ Alert Received
 {
   "playbook": "autonomous-incident-response",
   "agent": "eks-sre-agent",
-  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "model": "anthropic.claude-3-sonnet-20240229-v1:0",
   "workflow": {
     "1_detect": {
       "action": "receive_alert",
@@ -134,7 +134,7 @@ Alert Received
 {
   "playbook": "predictive-scaling",
   "agent": "eks-sre-agent",
-  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "model": "anthropic.claude-3-sonnet-20240229-v1:0",
   "workflow": {
     "1_collect": {
       "action": "gather_metrics",
@@ -182,7 +182,7 @@ Alert Received
 {
   "playbook": "security-optimization",
   "agent": "eks-sre-agent",
-  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "model": "anthropic.claude-3-sonnet-20240229-v1:0",
   "workflow": {
     "1_scan": {
       "action": "security_assessment",
@@ -233,7 +233,7 @@ Alert Received
 {
   "playbook": "cost-optimization",
   "agent": "eks-sre-agent",
-  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "model": "anthropic.claude-3-sonnet-20240229-v1:0",
   "workflow": {
     "1_analyze": {
       "action": "cost_analysis",
@@ -282,7 +282,7 @@ Alert Received
 {
   "playbook": "automated-rollback",
   "agent": "eks-sre-agent",
-  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "model": "anthropic.claude-3-sonnet-20240229-v1:0",
   "workflow": {
     "1_detect": {
       "action": "health_check",
@@ -441,7 +441,7 @@ Verification: New pods running successfully. Memory usage stable at 320Mi.
 ```bash
 aws bedrock-agent create-agent \
   --agent-name eks-sre-agent \
-  --foundation-model anthropic.claude-3-5-sonnet-20241022-v2:0 \
+  --foundation-model anthropic.claude-3-sonnet-20240229-v1:0 \
   --instruction "$(cat agent-prompt.txt)" \
   --agent-resource-role-arn arn:aws-us-gov:iam::${account_id}:role/bedrock-agent-role \
   --region us-gov-west-1

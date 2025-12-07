@@ -53,7 +53,7 @@
 
 ### Amazon Bedrock
 - **Component:** Bedrock Agent Runtime
-- **Model:** anthropic.claude-3-5-sonnet-20241022-v2:0
+- **Model:** anthropic.claude-3-sonnet-20240229-v1:0
 - **Managed By:** AWS
 - **Security Updates:** Automatic (AWS-managed)
 - **Compliance:** FedRAMP Moderate (in process for High)

@@ -47,7 +47,7 @@ Bedrock Claude ↔ MCP Client ↔ MCP Server ↔ EKS Cluster
     },
     {
       "action": "analyze",
-      "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "model": "anthropic.claude-3-sonnet-20240229-v1:0",
       "prompt": "Analyze pod crash: logs=${logs}, events=${events}"
     },
     {
@@ -99,7 +99,7 @@ kubectl rollout undo deployment/${deployment} -n ${namespace}
     },
     {
       "action": "analyze",
-      "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "model": "anthropic.claude-3-sonnet-20240229-v1:0",
       "prompt": "Memory pressure analysis: node_metrics=${node_metrics}, pod_metrics=${pod_metrics}"
     },
     {
@@ -129,7 +129,7 @@ kubectl rollout undo deployment/${deployment} -n ${namespace}
     },
     {
       "action": "analyze",
-      "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "model": "anthropic.claude-3-sonnet-20240229-v1:0",
       "prompt": "Security threat analysis: finding=${finding}, severity=${severity}"
     },
     {
@@ -191,7 +191,7 @@ kubectl delete rolebinding ${binding_name} -n ${namespace}
     },
     {
       "action": "analyze",
-      "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "model": "anthropic.claude-3-sonnet-20240229-v1:0",
       "prompt": "Deployment failure: events=${events}, pod_status=${pod_status}"
     },
     {
@@ -233,7 +233,7 @@ kubectl delete rolebinding ${binding_name} -n ${namespace}
     },
     {
       "action": "analyze",
-      "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "model": "anthropic.claude-3-sonnet-20240229-v1:0",
       "prompt": "Service mesh analysis: istiod_logs=${logs}, service_graph=${graph}"
     },
     {
@@ -277,7 +277,7 @@ kubectl delete rolebinding ${binding_name} -n ${namespace}
     },
     {
       "action": "analyze",
-      "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "model": "anthropic.claude-3-sonnet-20240229-v1:0",
       "prompt": "KEDA failure: scaler_config=${config}, error=${error}"
     },
     {
@@ -405,7 +405,7 @@ subjects:
 ```json
 {
   "agentName": "eks-sre-agent",
-  "foundationModel": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "foundationModel": "anthropic.claude-3-sonnet-20240229-v1:0",
   "instruction": "You are an SRE agent for EKS cluster operations. Execute runbooks, analyze incidents, and remediate issues. Always explain your actions and request approval for destructive operations.",
   "actionGroups": [
     {

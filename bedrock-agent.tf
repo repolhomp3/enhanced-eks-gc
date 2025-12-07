@@ -91,7 +91,7 @@ resource "aws_iam_role_policy" "bedrock_agent" {
       {
         Effect   = "Allow"
         Action   = ["bedrock:InvokeModel"]
-        Resource = "arn:${data.aws_partition.current.partition}:bedrock:${var.aws_region}::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0"
+        Resource = "arn:${data.aws_partition.current.partition}:bedrock:${var.aws_region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"
       },
       {
         Effect   = "Allow"
@@ -175,7 +175,7 @@ resource "aws_iam_role_policy" "mcp_server_lambda" {
       { Effect = "Allow", Action = ["cloudwatch:GetMetricData", "cloudwatch:GetMetricStatistics", "logs:GetLogEvents", "logs:FilterLogEvents"], Resource = "*" },
       { Effect = "Allow", Action = ["guardduty:GetFindings", "guardduty:ListFindings"], Resource = "*" },
       { Effect = "Allow", Action = ["xray:GetServiceGraph", "xray:GetTraceSummaries", "xray:GetTraceGraph"], Resource = "*" },
-      { Effect = "Allow", Action = ["bedrock:InvokeModel"], Resource = "arn:${data.aws_partition.current.partition}:bedrock:${var.aws_region}::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0" }
+      { Effect = "Allow", Action = ["bedrock:InvokeModel"], Resource = "arn:${data.aws_partition.current.partition}:bedrock:${var.aws_region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0" }
     ]
   })
 }
