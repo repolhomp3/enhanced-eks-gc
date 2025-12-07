@@ -76,3 +76,13 @@ enable_guardduty = true
 # Enable Security Hub for automated CIS benchmarks and compliance monitoring
 # Includes: CIS AWS Foundations Benchmark v1.4.0, AWS Foundational Security Best Practices
 enable_security_hub = true
+
+# ============================================================================
+# Secrets Management (External Secrets Operator)
+# ============================================================================
+# Enable External Secrets Operator to sync secrets from AWS Secrets Manager
+enable_external_secrets = true
+external_secrets_version = "0.9.11"
+
+# Create example secret for demonstration (disable in production)
+create_example_secret = false

@@ -125,3 +125,21 @@ variable "enable_security_hub" {
   type        = bool
   default     = true
 }
+
+variable "enable_external_secrets" {
+  description = "Enable External Secrets Operator for AWS Secrets Manager integration"
+  type        = bool
+  default     = true
+}
+
+variable "external_secrets_version" {
+  description = "External Secrets Operator Helm chart version"
+  type        = string
+  default     = "0.9.11"
+}
+
+variable "create_example_secret" {
+  description = "Create example secret in Secrets Manager for demonstration"
+  type        = bool
+  default     = false
+}

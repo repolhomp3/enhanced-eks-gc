@@ -108,3 +108,23 @@ output "security_hub_sns_topic_arn" {
   description = "SNS topic ARN for Security Hub findings"
   value       = var.enable_security_hub ? aws_sns_topic.security_hub_findings[0].arn : null
 }
+
+output "secrets_manager_kms_key_id" {
+  description = "KMS key ID for Secrets Manager encryption"
+  value       = aws_kms_key.secrets_manager.id
+}
+
+output "secrets_manager_kms_key_arn" {
+  description = "KMS key ARN for Secrets Manager encryption"
+  value       = aws_kms_key.secrets_manager.arn
+}
+
+output "external_secrets_role_arn" {
+  description = "IAM role ARN for External Secrets Operator"
+  value       = var.enable_external_secrets ? aws_iam_role.external_secrets[0].arn : null
+}
+
+output "example_secret_arn" {
+  description = "Example secret ARN in Secrets Manager"
+  value       = var.enable_external_secrets && var.create_example_secret ? aws_secretsmanager_secret.example[0].arn : null
+}
