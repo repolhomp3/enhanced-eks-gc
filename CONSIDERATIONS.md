@@ -217,31 +217,48 @@ helm install kubecost kubecost/cost-analyzer \
 
 ### 7. Certificate Management
 
-**Install cert-manager:**
+**✅ Use AWS Certificate Manager (ACM) - FedRAMP Compliant**
+
+ACM is FedRAMP High authorized and recommended for GovCloud:
+
 ```bash
-helm install cert-manager jetstack/cert-manager \
-  --namespace cert-manager \
-  --create-namespace \
-  --set installCRDs=true
+# Request certificate via AWS CLI
+aws acm request-certificate \
+  --domain-name "*.example.com" \
+  --subject-alternative-names "example.com" \
+  --validation-method DNS \
+  --region us-gov-west-1
+
+# Use with ALB Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws-us-gov:acm:us-gov-west-1:123456789012:certificate/xxxxx
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+spec:
+  ingressClassName: alb
+  rules:
+  - host: app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-service
+            port:
+              number: 80
 ```
 
-**ClusterIssuer for Let's Encrypt:**
-```yaml
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@example.com
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: alb
-```
+**Benefits:**
+- ✅ FedRAMP High authorized
+- ✅ Automatic renewal
+- ✅ Free for AWS resources
+- ✅ Integrates with ALB/NLB
+- ✅ No cert-manager needed (not FedRAMP authorized)
+
+**Note:** cert-manager is NOT FedRAMP authorized. Use ACM for compliance.
 
 ### 8. GitOps
 
