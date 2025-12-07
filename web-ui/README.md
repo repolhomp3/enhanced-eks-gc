@@ -142,7 +142,42 @@ aws eks create-pod-identity-association \
 
 ## Helm Chart Values
 
-Customize `helm/sre-assistant/values.yaml` or use `--set`:
+### Secrets Management Methods
+
+**Option 1: Native K8s Secret (Default)**
+```bash
+helm install sre-assistant helm/sre-assistant \
+  --set secret.method=native \
+  --set secret.secretKey=$(python -c 'import os; print(os.urandom(24).hex())')
+```
+
+**Option 2: External Secrets Operator (NOT FedRAMP)**
+```bash
+# Create secret in AWS Secrets Manager first
+aws secretsmanager create-secret \
+  --name sre-assistant-flask-secret \
+  --secret-string '{"secret-key":"'$(python -c 'import os; print(os.urandom(24).hex())')'"}' \
+  --region us-gov-west-1
+
+# Deploy with External Secrets
+helm install sre-assistant helm/sre-assistant \
+  -f helm/sre-assistant/values-external-secrets.yaml
+```
+
+**Option 3: Secrets Store CSI Driver (FedRAMP Compliant)**
+```bash
+# Create secret in AWS Secrets Manager first
+aws secretsmanager create-secret \
+  --name sre-assistant-flask-secret \
+  --secret-string '{"secret-key":"'$(python -c 'import os; print(os.urandom(24).hex())')'"}' \
+  --region us-gov-west-1
+
+# Deploy with CSI Driver
+helm install sre-assistant helm/sre-assistant \
+  -f helm/sre-assistant/values-csi-driver.yaml
+```
+
+### Other Configuration
 
 ```yaml
 replicaCount: 2

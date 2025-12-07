@@ -98,9 +98,23 @@ terraform apply
 
 **Setup:** See [CHATBOT-SETUP.md](CHATBOT-SETUP.md)
 
-### 6. Deploy Web UI
+### 6. Create AWS Secrets Manager Secret (for External Secrets or CSI Driver)
 
-#### Option A: Helm (Manual)
+```bash
+# Generate secret key
+FLASK_SECRET_KEY=$(python -c 'import os; print(os.urandom(24).hex())')
+
+# Create in AWS Secrets Manager
+aws secretsmanager create-secret \
+  --name sre-assistant-flask-secret \
+  --secret-string '{"secret-key":"'$FLASK_SECRET_KEY'"}' \
+  --kms-key-id alias/enhanced-eks-cluster-secrets-manager \
+  --region us-gov-west-1
+```
+
+### 7. Deploy Web UI
+
+#### Option A: Helm with Native Secret (Quick Start)
 
 ```bash
 cd web-ui
@@ -113,7 +127,7 @@ docker build -t sre-assistant .
 docker tag sre-assistant:latest $ACCOUNT_ID.dkr.ecr.us-gov-west-1.amazonaws.com/sre-assistant:latest
 docker push $ACCOUNT_ID.dkr.ecr.us-gov-west-1.amazonaws.com/sre-assistant:latest
 
-# Deploy with Helm
+# Deploy with Helm (native K8s secret)
 AGENT_ID=$(cat ../bedrock_agent_id.txt)
 FLASK_SECRET_KEY=$(python -c 'import os; print(os.urandom(24).hex())')
 
@@ -124,12 +138,34 @@ helm upgrade --install sre-assistant helm/sre-assistant \
   --set image.tag=latest \
   --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=arn:aws-us-gov:iam::$ACCOUNT_ID:role/enhanced-eks-cluster-sre-assistant-role \
   --set bedrock.agentId=$AGENT_ID \
+  --set secret.method=native \
   --set secret.secretKey=$FLASK_SECRET_KEY \
   --set ingress.certificateArn=arn:aws-us-gov:acm:us-gov-west-1:$ACCOUNT_ID:certificate/your-cert-id \
   --set ingress.host=sre-assistant.internal.example.com
 ```
 
-#### Option B: GitLab CI/CD (Automated)
+#### Option B: Helm with External Secrets Operator
+
+```bash
+# Deploy with External Secrets (NOT FedRAMP authorized)
+helm upgrade --install sre-assistant helm/sre-assistant \
+  -f helm/sre-assistant/values-external-secrets.yaml \
+  --set image.repository=$ACCOUNT_ID.dkr.ecr.us-gov-west-1.amazonaws.com/sre-assistant \
+  --set bedrock.agentId=$AGENT_ID
+```
+
+#### Option C: Helm with Secrets Store CSI Driver (FedRAMP Compliant)
+
+```bash
+# Deploy with CSI Driver (FedRAMP compliant)
+helm upgrade --install sre-assistant helm/sre-assistant \
+  -f helm/sre-assistant/values-csi-driver.yaml \
+  --set image.repository=$ACCOUNT_ID.dkr.ecr.us-gov-west-1.amazonaws.com/sre-assistant \
+  --set bedrock.agentId=$AGENT_ID \
+  --set secret.csiDriver.secretName=arn:aws-us-gov:secretsmanager:us-gov-west-1:$ACCOUNT_ID:secret:sre-assistant-flask-secret
+```
+
+#### Option D: GitLab CI/CD (Automated)
 
 1. **Push code to GitLab**
 
@@ -151,6 +187,8 @@ Go to Settings → CI/CD → Variables:
 | POD_IDENTITY_ROLE_ARN | arn:aws-us-gov:iam::...  | ✓ | ✗ |
 | BEDROCK_AGENT_ID | agent-id | ✓ | ✗ |
 | FLASK_SECRET_KEY | random-key | ✓ | ✓ |
+| SECRETS_METHOD | native, external-secrets, or csi-driver | ✓ | ✗ |
+| AWS_SECRET_NAME | sre-assistant-flask-secret | ✓ | ✗ |
 | ACM_CERTIFICATE_ARN | arn:aws-us-gov:acm:... | ✓ | ✗ |
 | INGRESS_HOST | sre-assistant.internal.example.com | ✓ | ✗ |
 

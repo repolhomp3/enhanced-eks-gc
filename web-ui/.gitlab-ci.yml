@@ -42,7 +42,10 @@ deploy:dev:
         --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$POD_IDENTITY_ROLE_ARN \
         --set bedrock.agentId=$BEDROCK_AGENT_ID \
         --set bedrock.region=$AWS_REGION \
+        --set secret.method=${SECRETS_METHOD:-native} \
         --set secret.secretKey=$FLASK_SECRET_KEY \
+        --set secret.externalSecrets.secretName=${AWS_SECRET_NAME:-sre-assistant-flask-secret} \
+        --set secret.csiDriver.secretName=arn:aws-us-gov:secretsmanager:$AWS_REGION:$AWS_ACCOUNT_ID:secret:${AWS_SECRET_NAME:-sre-assistant-flask-secret} \
         --set ingress.certificateArn=$ACM_CERTIFICATE_ARN \
         --set ingress.host=$INGRESS_HOST \
         --wait \
@@ -69,7 +72,10 @@ deploy:prod:
         --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$POD_IDENTITY_ROLE_ARN \
         --set bedrock.agentId=$BEDROCK_AGENT_ID \
         --set bedrock.region=$AWS_REGION \
+        --set secret.method=${SECRETS_METHOD:-native} \
         --set secret.secretKey=$FLASK_SECRET_KEY \
+        --set secret.externalSecrets.secretName=${AWS_SECRET_NAME:-sre-assistant-flask-secret} \
+        --set secret.csiDriver.secretName=arn:aws-us-gov:secretsmanager:$AWS_REGION:$AWS_ACCOUNT_ID:secret:${AWS_SECRET_NAME:-sre-assistant-flask-secret} \
         --set ingress.certificateArn=$ACM_CERTIFICATE_ARN \
         --set ingress.host=$INGRESS_HOST \
         --set replicaCount=3 \

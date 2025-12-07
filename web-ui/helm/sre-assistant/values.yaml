@@ -21,7 +21,24 @@ bedrock:
   region: "us-gov-west-1"
 
 secret:
-  secretKey: ""  # Set via --set or sealed-secrets
+  # Method: "native" (K8s secret), "external-secrets", or "csi-driver"
+  method: "native"
+  secretKey: ""  # Set via --set (for native method)
+  
+  # External Secrets Operator configuration
+  externalSecrets:
+    enabled: false
+    secretStore: "aws-secrets-manager"  # ClusterSecretStore name
+    secretName: "sre-assistant-flask-secret"  # AWS Secrets Manager secret name
+    secretKey: "secret-key"  # Key in AWS secret
+  
+  # Secrets Store CSI Driver configuration (FedRAMP compliant)
+  csiDriver:
+    enabled: false
+    secretProviderClass: "sre-assistant-secrets"
+    secretName: "sre-assistant-flask-secret"  # AWS Secrets Manager secret ARN
+    mountPath: "/mnt/secrets"
+    secretKey: "secret-key"
 
 service:
   type: ClusterIP
@@ -67,3 +84,8 @@ autoscaling:
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
+
+podIdentity:
+  # Add sre-assistant namespace to pod_identity_namespaces in terraform.tfvars
+  # Terraform will create the Pod Identity association automatically
+  enabled: true

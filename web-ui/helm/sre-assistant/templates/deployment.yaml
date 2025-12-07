@@ -18,6 +18,15 @@ spec:
         {{- include "sre-assistant.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "sre-assistant.serviceAccountName" . }}
+      {{- if eq .Values.secret.method "csi-driver" }}
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: {{ .Values.secret.csiDriver.secretProviderClass }}
+      {{- end }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -34,10 +43,20 @@ spec:
         - name: AGENT_ALIAS_ID
           value: {{ .Values.bedrock.agentAliasId | quote }}
         - name: SECRET_KEY
+          {{- if eq .Values.secret.method "csi-driver" }}
+          value: "$(cat {{ .Values.secret.csiDriver.mountPath }}/secret-key)"
+          {{- else }}
           valueFrom:
             secretKeyRef:
               name: {{ include "sre-assistant.fullname" . }}-secret
               key: secret-key
+          {{- end }}
+        {{- if eq .Values.secret.method "csi-driver" }}
+        volumeMounts:
+        - name: secrets-store
+          mountPath: {{ .Values.secret.csiDriver.mountPath }}
+          readOnly: true
+        {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         livenessProbe:

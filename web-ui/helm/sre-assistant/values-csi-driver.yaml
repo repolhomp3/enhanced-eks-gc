@@ -1,0 +1,30 @@
+# Example values for Secrets Store CSI Driver (FedRAMP compliant)
+# Use: helm install sre-assistant . -f values-csi-driver.yaml
+
+replicaCount: 2
+
+image:
+  repository: 123456789012.dkr.ecr.us-gov-west-1.amazonaws.com/sre-assistant
+  tag: latest
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws-us-gov:iam::123456789012:role/enhanced-eks-cluster-sre-assistant-role
+
+bedrock:
+  agentId: "your-agent-id"
+  region: "us-gov-west-1"
+
+secret:
+  method: "csi-driver"
+  csiDriver:
+    enabled: true
+    secretProviderClass: "sre-assistant-secrets"
+    secretName: "arn:aws-us-gov:secretsmanager:us-gov-west-1:123456789012:secret:sre-assistant-flask-secret"
+    mountPath: "/mnt/secrets"
+    secretKey: "secret-key"
+
+ingress:
+  enabled: true
+  host: sre-assistant.internal.example.com
+  certificateArn: arn:aws-us-gov:acm:us-gov-west-1:123456789012:certificate/your-cert-id
