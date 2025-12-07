@@ -9,6 +9,20 @@ Complete guide to deploying and using Amazon Bedrock AI agents for autonomous EK
 - kubectl
 - Python 3.12+ (for Lambda development)
 - Access to Amazon Bedrock in GovCloud
+- **Model access enabled** for Claude 3 Sonnet or Haiku
+
+## Available Models in GovCloud
+
+**✅ Available in us-gov-west-1:**
+- `anthropic.claude-3-sonnet-20240229-v1:0` (Claude 3 Sonnet)
+- `anthropic.claude-3-haiku-20240307-v1:0` (Claude 3 Haiku)
+
+**❌ Not yet available:**
+- Claude 3.5 Sonnet (v1 or v2)
+- Claude 3 Opus
+- Experimental/fast-follow models
+
+**Recommendation:** Use Claude 3 Sonnet for production workloads.
 
 ## Step 1: Deploy Base Infrastructure
 
@@ -82,10 +96,10 @@ AGENT_ROLE_ARN=$(terraform output -raw bedrock_agent_role_arn)
 S3_BUCKET=$(terraform output -raw bedrock_agent_s3_bucket)
 MCP_LAMBDA_ARN=$(terraform output -raw mcp_server_lambda_arn)
 
-# Create agent
+# Create agent (using Claude 3 Sonnet - available in GovCloud)
 AGENT_ID=$(aws bedrock-agent create-agent \
   --agent-name enhanced-eks-sre-agent \
-  --foundation-model anthropic.claude-3-5-sonnet-20241022-v2:0 \
+  --foundation-model anthropic.claude-3-sonnet-20240229-v1:0 \
   --instruction "You are an expert SRE agent managing EKS cluster enhanced-eks-cluster in us-gov-west-1. Execute runbooks, analyze incidents, and remediate issues. Always explain your actions and request approval for destructive operations." \
   --agent-resource-role-arn $AGENT_ROLE_ARN \
   --region us-gov-west-1 \
@@ -232,7 +246,7 @@ Update agent:
 aws bedrock-agent update-agent \
   --agent-id $AGENT_ID \
   --agent-name enhanced-eks-sre-agent \
-  --foundation-model anthropic.claude-3-5-sonnet-20241022-v2:0 \
+  --foundation-model anthropic.claude-3-sonnet-20240229-v1:0 \
   --instruction "$(cat agent-instruction.txt)" \
   --region us-gov-west-1
 

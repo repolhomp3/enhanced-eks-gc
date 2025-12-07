@@ -7,7 +7,7 @@ Production-ready EKS cluster with Auto Mode, KEDA, Istio, and comprehensive secu
 ## Features
 
 - **EKS Auto Mode**: Automated node provisioning and management
-- **AI-Driven Operations**: Optional Bedrock AI agents for autonomous cluster management
+- **AI-Driven Operations**: Optional Bedrock AI agents (Claude 3 Sonnet/Haiku available in GovCloud)
 - **Region**: us-gov-west-1 (AWS GovCloud)
 - **High Availability**: 3 AZs with public/private subnets
 - **Security & Compliance**:
@@ -434,6 +434,12 @@ Enable autonomous EKS operations with Amazon Bedrock AI agents:
 enable_bedrock_agent = true
 ```
 
+**Available Models in GovCloud:**
+- ✅ Claude 3 Sonnet (anthropic.claude-3-sonnet)
+- ✅ Claude 3 Haiku (anthropic.claude-3-haiku)
+- ❌ Claude 3.5 Sonnet (not yet available)
+- ❌ Claude Opus (not yet available)
+
 **Features:**
 - Autonomous incident response
 - Predictive scaling
@@ -469,6 +475,8 @@ See [AI-GETTING-STARTED.md](AI-GETTING-STARTED.md) for setup guide.
 - [SRE-RUNBOOKS.md](SRE-RUNBOOKS.md) - Automated runbooks
 - [AI-PLAYBOOKS.md](AI-PLAYBOOKS.md) - Agentic workflows
 - [web-ui/README.md](web-ui/README.md) - Web chat interface
+
+**Note:** GovCloud supports Claude 3 Sonnet/Haiku. Claude 3.5 Sonnet and Opus not yet available.
 
 ## Support
 
