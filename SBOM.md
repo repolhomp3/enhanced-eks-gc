@@ -49,6 +49,32 @@
 
 ---
 
+## AI/ML Components (Optional)
+
+### Amazon Bedrock
+- **Component:** Bedrock Agent Runtime
+- **Model:** anthropic.claude-3-5-sonnet-20241022-v2:0
+- **Managed By:** AWS
+- **Security Updates:** Automatic (AWS-managed)
+- **Compliance:** FedRAMP Moderate (in process for High)
+- **Purpose:** AI-driven EKS operations
+
+### Lambda Functions
+| Function | Runtime | Purpose | Source |
+|----------|---------|---------|--------|
+| mcp-server | Python 3.12 | MCP protocol handler | lambda/mcp-server/ |
+| bedrock-agent-trigger | Python 3.12 | EventBridge handler | lambda/bedrock-agent-trigger/ |
+
+**Python Dependencies:**
+- boto3 >= 1.34.0 (AWS SDK)
+- kubernetes >= 29.0.0 (K8s client)
+
+**CVE Tracking:** 
+- AWS Lambda runtime: AWS Security Bulletins
+- Python packages: https://pypi.org/security/
+
+---
+
 ## Third-Party Helm Charts
 
 ### Istio Service Mesh

@@ -7,6 +7,7 @@ Production-ready EKS cluster with Auto Mode, KEDA, Istio, and comprehensive secu
 ## Features
 
 - **EKS Auto Mode**: Automated node provisioning and management
+- **AI-Driven Operations**: Optional Bedrock AI agents for autonomous cluster management
 - **Region**: us-gov-west-1 (AWS GovCloud)
 - **High Availability**: 3 AZs with public/private subnets
 - **Security & Compliance**:
@@ -50,6 +51,7 @@ Production-ready EKS cluster with Auto Mode, KEDA, Istio, and comprehensive secu
 - Storage, observability, load balancers: ~$100/month
 - Security (GuardDuty, Security Hub, KMS): ~$40-50/month
 - VPC Endpoints (if enabled): ~$50-100/month
+- AI Operations (if enabled): ~$50-100/month
 
 **Cost Optimization:**
 - Single NAT Gateway saves ~$200/month vs 3 NAT Gateways
@@ -399,6 +401,9 @@ enable_security_hub = true
 enable_external_secrets = true   # NOT FedRAMP authorized
 enable_secrets_store_csi = false # FedRAMP compliant alternative
 
+# AI-driven operations
+enable_bedrock_agent = false # Bedrock AI agent for autonomous operations
+
 # Namespaces with Pod Identity permissions
 pod_identity_namespaces = ["default"]
 ```
@@ -418,6 +423,26 @@ This cluster is designed for GovCloud STIG/FedRAMP compliance:
 
 See [CONSIDERATIONS.md](CONSIDERATIONS.md) for additional hardening steps.
 
+## AI-Driven Operations (Optional)
+
+Enable autonomous EKS operations with Amazon Bedrock AI agents:
+
+```hcl
+# In terraform.tfvars
+enable_bedrock_agent = true
+```
+
+**Features:**
+- Autonomous incident response
+- Predictive scaling
+- Security posture optimization
+- Automated rollback
+- Self-healing workflows
+
+**Cost:** ~$50-100/month
+
+See [AI-GETTING-STARTED.md](AI-GETTING-STARTED.md) for setup guide.
+
 ## Documentation
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture specifications
@@ -425,6 +450,10 @@ See [CONSIDERATIONS.md](CONSIDERATIONS.md) for additional hardening steps.
 - [SECRETS-MANAGEMENT.md](SECRETS-MANAGEMENT.md) - Secrets management guide
 - [FEDRAMP-COMPLIANCE.md](FEDRAMP-COMPLIANCE.md) - FedRAMP compliance guide
 - [SBOM.md](SBOM.md) - Software Bill of Materials
+- [DAY2-OPERATIONS.md](DAY2-OPERATIONS.md) - Day 2 operations guide
+- [AI-GETTING-STARTED.md](AI-GETTING-STARTED.md) - AI agent setup guide
+- [SRE-RUNBOOKS.md](SRE-RUNBOOKS.md) - Automated runbooks
+- [AI-PLAYBOOKS.md](AI-PLAYBOOKS.md) - Agentic workflows
 
 ## Support
 
