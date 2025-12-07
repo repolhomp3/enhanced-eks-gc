@@ -48,3 +48,23 @@ output "pod_identity_role_arn" {
   description = "Pod Identity IAM Role ARN for default namespace"
   value       = aws_iam_role.default_pod_identity.arn
 }
+
+output "vpc_endpoints_enabled" {
+  description = "Whether VPC endpoints are enabled"
+  value       = var.enable_vpc_endpoints
+}
+
+output "vpc_endpoint_interface_ids" {
+  description = "Map of interface VPC endpoint IDs"
+  value       = var.enable_vpc_endpoints ? { for k, v in aws_vpc_endpoint.interface : k => v.id } : {}
+}
+
+output "vpc_endpoint_gateway_ids" {
+  description = "Map of gateway VPC endpoint IDs (S3, DynamoDB)"
+  value       = var.enable_vpc_endpoints ? { for k, v in aws_vpc_endpoint.gateway : k => v.id } : {}
+}
+
+output "vpc_endpoints_security_group_id" {
+  description = "Security group ID for VPC endpoints"
+  value       = var.enable_vpc_endpoints ? aws_security_group.vpc_endpoints[0].id : null
+}
