@@ -102,3 +102,17 @@ create_example_secret = false
 # Includes: MCP server, Lambda functions, EventBridge triggers
 # Cost: ~$50-100/month depending on usage
 enable_bedrock_agent = false
+
+# ============================================================================
+# Incident Manager (On-Call Management)
+# ============================================================================
+# Enable AWS Systems Manager Incident Manager for on-call rotations and SMS alerts
+# Cost: $3.50/month per on-call contact + SMS charges ($0.00645 per SMS in US)
+enable_incident_manager = false
+
+# On-call phone numbers for SMS alerts (E.164 format: +1234567890)
+# Store in terraform.tfvars.secret or use environment variables
+oncall_phone_numbers = [
+  # "+12025551234",  # Primary on-call
+  # "+12025555678",  # Secondary on-call
+]

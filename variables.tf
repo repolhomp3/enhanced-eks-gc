@@ -105,3 +105,16 @@ variable "metrics_server_version" {
   type        = string
   default     = "3.12.2"
 }
+
+variable "enable_incident_manager" {
+  description = "Enable AWS Systems Manager Incident Manager for on-call management"
+  type        = bool
+  default     = false
+}
+
+variable "oncall_phone_numbers" {
+  description = "List of phone numbers for SMS alerts (E.164 format: +1234567890)"
+  type        = list(string)
+  default     = []
+  sensitive   = true
+}

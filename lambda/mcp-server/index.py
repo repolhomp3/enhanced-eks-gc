@@ -3,6 +3,7 @@ import os
 import boto3
 import base64
 from kubernetes import client, config
+from tools import MCPTools
 
 eks = boto3.client('eks', region_name=os.environ['AWS_REGION'])
 cloudwatch = boto3.client('cloudwatch', region_name=os.environ['AWS_REGION'])
@@ -28,6 +29,9 @@ configuration.api_key = {"authorization": f"Bearer {token}"}
 client.Configuration.set_default(configuration)
 v1 = client.CoreV1Api()
 apps_v1 = client.AppsV1Api()
+
+# Initialize MCP tools
+mcp_tools = MCPTools(os.environ['AWS_REGION'], os.environ['CLUSTER_NAME'])
 
 def handler(event, context):
     print(f"Received event: {json.dumps(event)}")
@@ -83,6 +87,18 @@ def handle_kubernetes(api_path, params):
         return kubectl_logs(params)
     elif api_path == '/kubectl/describe':
         return kubectl_describe(params)
+    elif api_path == '/kubectl/pod-health':
+        return mcp_tools.get_pod_health(params.get('namespaces', ['default']))
+    elif api_path == '/kubectl/probe-logs':
+        return mcp_tools.probe_logs_for_errors(
+            params.get('namespace'),
+            params.get('pod_name'),
+            params.get('error_patterns', ['ERROR', 'FATAL', 'Exception'])
+        )
+    elif api_path == '/kubectl/deployment-status':
+        return mcp_tools.get_deployment_status(params.get('namespace'), params.get('deployment_name'))
+    elif api_path == '/kubectl/node-resources':
+        return mcp_tools.get_node_resources()
     else:
         return {'error': f'Unknown kubectl operation: {api_path}'}
 
@@ -135,6 +151,31 @@ def handle_aws(api_path, params):
         return get_guardduty_findings(params)
     elif api_path == '/xray/get-service-graph':
         return get_xray_service_graph(params)
+    elif api_path == '/kinesis/get-metrics':
+        return mcp_tools.get_kinesis_metrics(params.get('stream_name'), params.get('hours', 1))
+    elif api_path == '/s3/get-object-count':
+        return mcp_tools.get_s3_object_count(params.get('bucket'), params.get('prefix', ''))
+    elif api_path == '/glue/job-status':
+        return mcp_tools.get_glue_job_status(params.get('job_name'))
+    elif api_path == '/glue/crawler-status':
+        return mcp_tools.check_glue_crawler_status(params.get('crawler_name'))
+    elif api_path == '/sns/send-alert':
+        return mcp_tools.send_sns_alert(
+            params.get('topic_arn'),
+            params.get('subject'),
+            params.get('message'),
+            params.get('severity', 'INFO')
+        )
+    elif api_path == '/cloudwatch/analyze-logs':
+        return mcp_tools.analyze_cloudwatch_logs(
+            params.get('log_group'),
+            params.get('hours', 1),
+            params.get('error_patterns', ['ERROR', 'FATAL', 'Exception'])
+        )
+    elif api_path == '/eks/cluster-health':
+        return mcp_tools.get_eks_cluster_health()
+    elif api_path == '/tools/list':
+        return mcp_tools.get_available_tools()
     else:
         return {'error': f'Unknown AWS operation: {api_path}'}
 
